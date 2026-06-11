@@ -1,0 +1,66 @@
+[gd_scene format=3 uid="uid://dhetdt8km5xc5"]
+
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/world/interactable.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="3"]
+
+[sub_resource type="RectangleShape2D" id="WallH"]
+size = Vector2(640, 16)
+
+[sub_resource type="RectangleShape2D" id="WallV"]
+size = Vector2(16, 360)
+
+[node name="TestRoom" type="Node2D"]
+
+[node name="Floor" type="ColorRect" parent="."]
+offset_right = 640.0
+offset_bottom = 360.0
+color = Color(0.12, 0.11, 0.13, 1)
+
+[node name="WallTop" type="ColorRect" parent="."]
+offset_right = 640.0
+offset_bottom = 16.0
+color = Color(0.3, 0.3, 0.34, 1)
+
+[node name="WallBottom" type="ColorRect" parent="."]
+offset_top = 344.0
+offset_right = 640.0
+offset_bottom = 360.0
+color = Color(0.3, 0.3, 0.34, 1)
+
+[node name="WallLeft" type="ColorRect" parent="."]
+offset_right = 16.0
+offset_bottom = 360.0
+color = Color(0.3, 0.3, 0.34, 1)
+
+[node name="WallRight" type="ColorRect" parent="."]
+offset_left = 624.0
+offset_right = 640.0
+offset_bottom = 360.0
+color = Color(0.3, 0.3, 0.34, 1)
+
+[node name="Walls" type="StaticBody2D" parent="."]
+
+[node name="ColTop" type="CollisionShape2D" parent="Walls"]
+position = Vector2(320, 8)
+shape = SubResource("WallH")
+
+[node name="ColBottom" type="CollisionShape2D" parent="Walls"]
+position = Vector2(320, 352)
+shape = SubResource("WallH")
+
+[node name="ColLeft" type="CollisionShape2D" parent="Walls"]
+position = Vector2(8, 180)
+shape = SubResource("WallV")
+
+[node name="ColRight" type="CollisionShape2D" parent="Walls"]
+position = Vector2(632, 180)
+shape = SubResource("WallV")
+
+[node name="Interactable" parent="." instance=ExtResource("2")]
+position = Vector2(470, 110)
+
+[node name="Player" parent="." instance=ExtResource("1")]
+position = Vector2(320, 200)
+
+[node name="HUD" parent="." instance=ExtResource("3")]

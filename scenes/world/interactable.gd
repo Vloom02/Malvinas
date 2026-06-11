@@ -1,0 +1,35 @@
+extends Area2D
+class_name Interactable
+## Un objeto del mundo con el que el jugador puede interactuar apretando E.
+##
+## Cómo funciona: es un Area2D (una zona que detecta cuando algo entra).
+## Cuando el jugador entra en la zona, se "arma"; si está adentro y apretás
+## la acción "interact", dispara su mensaje y la señal interacted.
+##
+## Reutilizable: cofres, carteles, puertas, NPCs... todos pueden ser un
+## Interactable con un mensaje distinto, sin duplicar código.
+
+## Texto que muestra al interactuar. Editable desde el Inspector por escena.
+@export var message: String = "No hay nada interesante aquí."
+
+signal interacted
+
+var _player_inside: bool = false
+
+func _ready() -> void:
+	body_entered.connect(_on_body_entered)
+	body_exited.connect(_on_body_exited)
+
+func _on_body_entered(body: Node) -> void:
+	if body.is_in_group("player"):
+		_player_inside = true
+		print("[Mundo] Cerca de un objeto — apretá E para interactuar.")
+
+func _on_body_exited(body: Node) -> void:
+	if body.is_in_group("player"):
+		_player_inside = false
+
+func _unhandled_input(event: InputEvent) -> void:
+	if _player_inside and event.is_action_pressed("interact"):
+		print("[Interacción] %s" % message)
+		interacted.emit()
