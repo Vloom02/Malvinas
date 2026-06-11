@@ -10,8 +10,8 @@ config_version=5
 
 [application]
 
-config/name="Hambre"
-config/description="RPG de terror/supervivencia por turnos (working title)."
+config/name="Malvinas"
+config/description="Codename Malvinas — RPG survival horror por turnos, Guerra de Malvinas 1982."
 config/version="0.0.1"
 run/main_scene="res://scenes/maps/test_room.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")

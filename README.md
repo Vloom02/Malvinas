@@ -1,7 +1,9 @@
-# Hambre (título provisional)
+# Malvinas (codename)
 
-RPG de terror/supervivencia por turnos, inspirado en *Fear & Hunger*.
-Hecho en **Godot 4.4** con **GDScript**.
+RPG survival horror por turnos, ambientado en la **Guerra de Malvinas (1982)**.
+Tono turbio inspirado en *Fear & Hunger* y *Trench Face*; enfoque antibélico.
+Teatros: infantería (trincheras), naval y aviación. Hecho en **Godot 4.6** con
+**GDScript**. (La carpeta/repo todavía se llaman "Hambre" por ahora.)
 
 ## Requisitos para desarrollar
 
