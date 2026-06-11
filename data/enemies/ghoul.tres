@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/enemy_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+display_name = "Necrófago"
+body_parts = {
+"brazo_der": 18,
+"brazo_izq": 18,
+"cabeza": 22,
+"pierna_der": 16,
+"pierna_izq": 16,
+"torso": 45
+}
+attack = 12
+defense = 3
+loot_table = Array[String](["carne_podrida", "diente"])

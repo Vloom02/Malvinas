@@ -1,0 +1,32 @@
+# ----- Godot 4 -----
+# Carpeta de cache/imports: se regenera sola al abrir el proyecto. NO versionar.
+.godot/
+
+# Exports / builds del juego
+/build/
+/export/
+*.exe
+*.pck
+*.zip
+*.apk
+*.dmg
+export_presets.cfg
+
+# Mono / C# (no lo usamos, pero por las dudas)
+.mono/
+data_*/
+mono_crash.*.json
+
+# ----- Sistema operativo -----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ----- Editores -----
+.vscode/
+.idea/
+*.swp
+*~
+
+# IMPORTANTE: los archivos *.import SÍ se versionan (no van acá).
+# Definen cómo Godot importa cada asset; si faltan, se rompe el repo.

@@ -1,0 +1,36 @@
+# ===== Git LFS: binarios pesados van por LFS, no infla el repo =====
+# Imágenes
+*.png   filter=lfs diff=lfs merge=lfs -text
+*.jpg   filter=lfs diff=lfs merge=lfs -text
+*.jpeg  filter=lfs diff=lfs merge=lfs -text
+*.gif   filter=lfs diff=lfs merge=lfs -text
+*.webp  filter=lfs diff=lfs merge=lfs -text
+*.psd   filter=lfs diff=lfs merge=lfs -text
+*.aseprite filter=lfs diff=lfs merge=lfs -text
+
+# Audio
+*.wav   filter=lfs diff=lfs merge=lfs -text
+*.ogg   filter=lfs diff=lfs merge=lfs -text
+*.mp3   filter=lfs diff=lfs merge=lfs -text
+
+# Fuentes
+*.ttf   filter=lfs diff=lfs merge=lfs -text
+*.otf   filter=lfs diff=lfs merge=lfs -text
+
+# Modelos 3D / video (por si algún día)
+*.glb   filter=lfs diff=lfs merge=lfs -text
+*.mp4   filter=lfs diff=lfs merge=lfs -text
+
+# ===== Tratar como TEXTO (para diffs y merges legibles) =====
+# Escenas, recursos y scripts de Godot son texto plano: NO van por LFS.
+*.gd      text eol=lf
+*.tscn    text eol=lf
+*.tres    text eol=lf
+*.godot   text eol=lf
+*.import  text eol=lf
+*.cfg     text eol=lf
+*.json    text eol=lf
+*.md      text eol=lf
+
+# El .svg del icono es texto, dejarlo como texto (no LFS)
+*.svg     text eol=lf
