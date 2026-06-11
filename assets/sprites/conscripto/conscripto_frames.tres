@@ -1,0 +1,157 @@
+[gd_resource type="SpriteFrames" load_steps=29 format=3 uid="uid://conscripto00frames"]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/animations/walking/south/frame_000.png" id="ws0"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/animations/walking/south/frame_001.png" id="ws1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/animations/walking/south/frame_002.png" id="ws2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/animations/walking/south/frame_003.png" id="ws3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/animations/walking/south/frame_004.png" id="ws4"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/animations/walking/south/frame_005.png" id="ws5"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/animations/walking/north/frame_000.png" id="wn0"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/animations/walking/north/frame_001.png" id="wn1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/animations/walking/north/frame_002.png" id="wn2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/animations/walking/north/frame_003.png" id="wn3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/animations/walking/north/frame_004.png" id="wn4"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/animations/walking/north/frame_005.png" id="wn5"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/animations/walking/east/frame_000.png" id="we0"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/animations/walking/east/frame_001.png" id="we1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/animations/walking/east/frame_002.png" id="we2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/animations/walking/east/frame_003.png" id="we3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/animations/walking/east/frame_004.png" id="we4"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/animations/walking/east/frame_005.png" id="we5"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/animations/walking/west/frame_000.png" id="ww0"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/animations/walking/west/frame_001.png" id="ww1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/animations/walking/west/frame_002.png" id="ww2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/animations/walking/west/frame_003.png" id="ww3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/animations/walking/west/frame_004.png" id="ww4"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/animations/walking/west/frame_005.png" id="ww5"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/rotations/south.png" id="is"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/rotations/north.png" id="in"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/rotations/east.png" id="ie"]
+[ext_resource type="Texture2D" path="res://assets/sprites/conscripto/rotations/west.png" id="iw"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("ws0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("ws1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("ws2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("ws3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("ws4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("ws5")
+}],
+"loop": true,
+"name": &"walk_south",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("wn0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("wn1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("wn2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("wn3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("wn4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("wn5")
+}],
+"loop": true,
+"name": &"walk_north",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("we0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("we1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("we2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("we3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("we4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("we5")
+}],
+"loop": true,
+"name": &"walk_east",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("ww0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("ww1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("ww2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("ww3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("ww4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("ww5")
+}],
+"loop": true,
+"name": &"walk_west",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("is")
+}],
+"loop": false,
+"name": &"idle_south",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("in")
+}],
+"loop": false,
+"name": &"idle_north",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("ie")
+}],
+"loop": false,
+"name": &"idle_east",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("iw")
+}],
+"loop": false,
+"name": &"idle_west",
+"speed": 5.0
+}]
