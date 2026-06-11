@@ -1,8 +1,9 @@
-[gd_scene format=3 uid="uid://dhetdt8km5xc5"]
+[gd_scene load_steps=7 format=3 uid="uid://dhetdt8km5xc5"]
 
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/world/interactable.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/world/enemy_encounter.tscn" id="4"]
 
 [sub_resource type="RectangleShape2D" id="WallH"]
 size = Vector2(640, 16)
@@ -57,8 +58,16 @@ shape = SubResource("WallV")
 position = Vector2(632, 180)
 shape = SubResource("WallV")
 
-[node name="Interactable" parent="." instance=ExtResource("2")]
+[node name="Cofre" parent="." instance=ExtResource("2")]
 position = Vector2(470, 110)
+
+[node name="Altar" parent="." instance=ExtResource("2")]
+position = Vector2(170, 110)
+message = "Un altar profano. Te observa de vuelta."
+sanity_cost = 34
+
+[node name="Necrofago" parent="." instance=ExtResource("4")]
+position = Vector2(470, 250)
 
 [node name="Player" parent="." instance=ExtResource("1")]
 position = Vector2(320, 200)

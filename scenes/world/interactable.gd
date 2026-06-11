@@ -12,6 +12,9 @@ class_name Interactable
 ## Texto que muestra al interactuar. Editable desde el Inspector por escena.
 @export var message: String = "No hay nada interesante aquí."
 
+## Cordura que cuesta interactuar (0 = inofensivo; >0 = objeto maldito).
+@export var sanity_cost: int = 0
+
 signal interacted
 
 var _player_inside: bool = false
@@ -32,4 +35,7 @@ func _on_body_exited(body: Node) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if _player_inside and event.is_action_pressed("interact"):
 		print("[Interacción] %s" % message)
+		if sanity_cost > 0:
+			GameState.drain_sanity(sanity_cost)
+			print("[Mundo] Algo se rompe en tu mente... (-%d cordura)" % sanity_cost)
 		interacted.emit()
