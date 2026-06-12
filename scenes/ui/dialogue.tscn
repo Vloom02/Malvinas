@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://cdialogue0hambre1"]
+[gd_scene format=3 uid="uid://d2imb6n78gegs"]
 
 [ext_resource type="Script" path="res://scenes/ui/dialogue.gd" id="1"]
 

@@ -58,3 +58,22 @@ func check(modifier: int = 0, dc: int = 10, advantage: int = 0) -> Dictionary:
 ## Probabilidad simple: devuelve true con probabilidad `probability` (0.0 a 1.0).
 func chance(probability: float) -> bool:
 	return randf() < probability
+
+## Tirada ENFRENTADA: vos y el enemigo tiran un d20 cada uno (totalmente
+## aleatorio para los dos) + su modificador. Devuelve quién ganó el intercambio.
+## La usa el "ataque arriesgado": ni vos ni el enemigo saben qué va a salir.
+func versus(player_mod: int = 0, enemy_mod: int = 0) -> Dictionary:
+	var player_die := roll(20)
+	var enemy_die := roll(20)
+	var player_total := player_die + player_mod
+	var enemy_total := enemy_die + enemy_mod
+	var result := {
+		"player_die": player_die,
+		"player_total": player_total,
+		"enemy_die": enemy_die,
+		"enemy_total": enemy_total,
+		"player_wins": player_total > enemy_total,
+		"tie": player_total == enemy_total,
+	}
+	rolled.emit(result)
+	return result

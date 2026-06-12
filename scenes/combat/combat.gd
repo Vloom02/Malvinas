@@ -77,6 +77,10 @@ func _build_action_buttons() -> void:
 		b.text = "Atacar %s" % part
 		b.pressed.connect(_on_attack_part.bind(part))
 		actions.add_child(b)
+	var risky := Button.new()
+	risky.text = "Ataque arriesgado (dados)"
+	risky.pressed.connect(_on_risky_attack)
+	actions.add_child(risky)
 	var heal := Button.new()
 	heal.text = "Vendarte"
 	heal.pressed.connect(_on_bandage)
@@ -206,6 +210,56 @@ func _on_dodge() -> void:
 		return
 	await get_tree().create_timer(0.7).timeout
 	_enemy_turn()
+
+## Opción de tirar los dados en combate: tirada ENFRENTADA (vos vs enemigo).
+## Los dos dados son aleatorios. El resultado se muestra en la ventana de diálogos.
+func _on_risky_attack() -> void:
+	if combat_over or not is_player_turn or _pending_dodge:
+		return
+	is_player_turn = false
+
+	var v := Dice.versus(2, enemy.defense)
+	var text := "ATAQUE ARRIESGADO\n\nVos:  [ d20 %d + 2 = %d ]\n%s:  [ d20 %d + %d = %d ]\n\n" % [
+		v["player_die"], v["player_total"],
+		enemy.display_name, v["enemy_die"], enemy.defense, v["enemy_total"]]
+
+	if v["player_wins"]:
+		var part := _strongest_part()
+		var dmg := PLAYER_DMG * 2
+		parts_hp[part] = maxi(0, parts_hp[part] - dmg)
+		_update_part_label(part)
+		text += "¡Ganás el intercambio! Golpe brutal a %s: %d de daño." % [part, dmg]
+		if parts_hp[part] == 0:
+			text += "\n¡Destruiste %s!" % part
+	elif v["tie"]:
+		text += "Empate: los golpes chocan, nadie cede."
+	else:
+		var dmg := enemy.attack + 4
+		GameState.damage_player(dmg)
+		GameState.apply_bleeding(1)
+		text += "%s te lee el movimiento: -%d de vida y te abre una herida." % [enemy.display_name, dmg]
+
+	_log(text)
+	Dialogue.say(text)
+	await Dialogue.finished
+
+	if _enemy_dead():
+		_win()
+		return
+	if GameState.player_hp <= 0:
+		_lose()
+		return
+	_enemy_turn()
+
+## Devuelve la parte viva con más HP (el "ataque arriesgado" pega a la más dura).
+func _strongest_part() -> String:
+	var best := ""
+	var best_hp := -1
+	for part in parts_hp.keys():
+		if parts_hp[part] > best_hp:
+			best_hp = parts_hp[part]
+			best = part
+	return best
 
 func _update_part_label(part: String) -> void:
 	if parts_hp[part] <= 0:

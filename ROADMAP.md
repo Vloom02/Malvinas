@@ -60,8 +60,10 @@ Este documento es la lista viva: vamos tildando `[x]` lo que se completa.
 
 ## ⚙️ FASE 2 — Profundidad de sistemas
 
-- [x] **Dado en combate (momentos puntuales)**: esquivar poderes de jefe, y firmar
-      el pulso al atacar herido. El combate base sigue determinista.
+- [x] **Dado en combate (momentos puntuales)**: opción "ataque arriesgado" (tirada
+      enfrentada vos vs enemigo, `Dice.versus`, mostrada en la ventana de diálogos),
+      esquivar poderes de jefe, y firmar el pulso al atacar herido. El combate base
+      sigue determinista.
 - [ ] **Más usos del dado**: saves (infección/frío/cordura), forzar/sigilo, primeros
       auxilios bajo presión.
 - [ ] **IA enemiga**: el enemigo elige qué parte tuya atacar; comportamientos.
