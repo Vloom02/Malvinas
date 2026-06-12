@@ -29,3 +29,14 @@ class_name EnemyData
 
 ## Items que puede soltar al morir (ids que resuelve el sistema de loot).
 @export var loot_table: Array[String] = []
+
+## --- Jefe / poderes (el dado se usa para ESQUIVARLOS) ---
+@export var is_boss: bool = false
+## Nombre del poder especial (vacío = no tiene).
+@export var power_name: String = ""
+## Daño si NO lo esquivás.
+@export var power_damage: int = 20
+## Dificultad de la tirada para esquivar (DC).
+@export var power_dc: int = 12
+## Probabilidad de que el jefe use el poder en su turno (0.0 a 1.0).
+@export var power_chance: float = 0.4

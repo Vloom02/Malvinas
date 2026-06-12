@@ -14,9 +14,12 @@ Este documento es la lista viva: vamos tildando `[x]` lo que se completa.
 2. **El cuerpo refleja todo.** Las interacciones marcan el cuerpo: pisás una
    enredadera → sangrás → se ve. Heridas, fracturas, infección, hipotermia, locura
    son estados persistentes que cambian la partida.
-3. **RNG por dado (estilo D&D).** Las acciones se resuelven con tiradas de dado
-   (d20 / d6) + modificadores, no con números fijos. Como el coin-flip de F&H pero
-   con dados: acertar, fallar, esquivar, resistir infección, etc.
+3. **RNG por dado (estilo D&D) SOLO en momentos de tensión.** El combate normal
+   es determinista; el dado NO resuelve cada ataque. Aparece en acciones
+   arriesgadas e inciertas: esquivar poderes de jefes, firmar el pulso al atacar
+   herido, peligros del mundo (enredadera, grietas), saves (infección, frío,
+   cordura), primeros auxilios bajo presión, forzar/sigilo. Como el coin-flip de
+   F&H pero con peso.
 4. **Horror antibélico y respetuoso.** El enemigo es el horror de la guerra (frío,
    trauma, criaturas), NO "matar británicos". Tema real y sensible: se trata con peso.
 5. **Escasez y consecuencias permanentes.** Inventario limitado, guardar es un
@@ -57,8 +60,10 @@ Este documento es la lista viva: vamos tildando `[x]` lo que se completa.
 
 ## ⚙️ FASE 2 — Profundidad de sistemas
 
-- [ ] **Combate con dados**: acierto/fallo/esquive por tirada; apuntar a partes con
-      probabilidad; daño variable.
+- [x] **Dado en combate (momentos puntuales)**: esquivar poderes de jefe, y firmar
+      el pulso al atacar herido. El combate base sigue determinista.
+- [ ] **Más usos del dado**: saves (infección/frío/cordura), forzar/sigilo, primeros
+      auxilios bajo presión.
 - [ ] **IA enemiga**: el enemigo elige qué parte tuya atacar; comportamientos.
 - [ ] **Sistema de diálogos** (cajas de texto, lore fragmentado estilo F&H).
 - [ ] **Guardar/cargar**, con el guardado como **recurso escaso** (no autosave libre).
