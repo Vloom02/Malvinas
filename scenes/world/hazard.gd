@@ -7,8 +7,8 @@ class_name Hazard
 ## Junta los tres pilares en una interacción: dado (D&D) + cuerpo (sangrado)
 ## + estado diegético (la viñeta roja, sin HUD).
 
-## Texto que sale en consola al pisarlo.
-@export var message: String = "¡Una enredadera con espinas!"
+## Texto que sale al pisarlo.
+@export var message: String = "¡Alambre de púas!"
 ## Cuánto sangrado agrega si fallás la tirada.
 @export var bleed_stacks: int = 2
 ## Dificultad de la tirada para esquivar (DC, estilo D&D).
@@ -42,7 +42,7 @@ func _on_body_entered(body: Node) -> void:
 	else:
 		GameState.apply_bleeding(bleed_stacks)
 		if r["fumble"]:
-			text += "\n¡Pifia! Te enredás feo."
-		text += "\nTe clavás las espinas: empezás a SANGRAR."
+			text += "\n¡Pifia! Te quedás trabado en el alambre."
+		text += "\nTe clavás las púas: empezás a SANGRAR."
 
 	Dialogue.say(text)

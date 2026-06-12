@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://cnpcmenu0hambre1"]
+[gd_scene format=3 uid="uid://cj48l1b4dl2ik"]
 
 [ext_resource type="Script" path="res://scenes/ui/npc_menu.gd" id="1"]
 

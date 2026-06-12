@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://broom2hambre1"]
+[gd_scene load_steps=16 format=3 uid="uid://broom2hambre1"]
 
 [ext_resource type="Script" path="res://scenes/world/room.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2"]
@@ -10,6 +10,9 @@
 [ext_resource type="Resource" path="res://data/items/racion.tres" id="8"]
 [ext_resource type="PackedScene" path="res://scenes/ui/inventory.tscn" id="9"]
 [ext_resource type="PackedScene" path="res://scenes/world/npc.tscn" id="10"]
+[ext_resource type="Texture2D" path="res://assets/props/sandbags.png" id="11"]
+[ext_resource type="Texture2D" path="res://assets/props/tussock.png" id="12"]
+[ext_resource type="Texture2D" path="res://assets/props/rock.png" id="13"]
 
 [sub_resource type="RectangleShape2D" id="WallH"]
 size = Vector2(640, 16)
@@ -68,6 +71,33 @@ shape = SubResource("WallV")
 [node name="ColRight" type="CollisionShape2D" parent="Walls"]
 position = Vector2(632, 180)
 shape = SubResource("WallV")
+
+[node name="Deco" type="Node2D" parent="."]
+
+[node name="Sandbag1" type="Sprite2D" parent="Deco"]
+position = Vector2(150, 40)
+texture = ExtResource("11")
+
+[node name="Sandbag2" type="Sprite2D" parent="Deco"]
+position = Vector2(300, 40)
+texture = ExtResource("11")
+
+[node name="Sandbag3" type="Sprite2D" parent="Deco"]
+position = Vector2(460, 40)
+texture = ExtResource("11")
+
+[node name="Tussock1" type="Sprite2D" parent="Deco"]
+position = Vector2(95, 300)
+texture = ExtResource("12")
+
+[node name="Tussock2" type="Sprite2D" parent="Deco"]
+position = Vector2(575, 305)
+texture = ExtResource("12")
+
+[node name="Rock1" type="Sprite2D" parent="Deco"]
+position = Vector2(220, 300)
+scale = Vector2(0.8, 0.8)
+texture = ExtResource("13")
 
 [node name="Entrada" type="Marker2D" parent="."]
 position = Vector2(110, 190)
