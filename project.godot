@@ -22,6 +22,7 @@ config/icon="res://icon.svg"
 Dice="*res://scripts/systems/dice.gd"
 GameState="*res://scripts/autoload/game_state.gd"
 Dialogue="*res://scenes/ui/dialogue.tscn"
+Transition="*res://scenes/ui/transition.tscn"
 
 [display]
 

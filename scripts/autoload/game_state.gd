@@ -25,6 +25,11 @@ var pending_enemy_path: String = ""
 var return_scene_path: String = "res://scenes/maps/test_room.tscn"
 var _madness_triggered: bool = false
 
+# --- Navegación entre salas ---
+## Nombre del punto de aparición (Marker2D) donde dejar al jugador al entrar
+## a la próxima sala. "" = usar la posición por defecto de la escena.
+var next_spawn: String = ""
+
 # --- Cuerpo: heridas persistentes (pilar de diseño) ---
 var bleeding: int = 0   # cantidad de heridas sangrando; drena vida con el tiempo
 var cold: int = 0       # hipotermia (0-100), la sube el ambiente helado

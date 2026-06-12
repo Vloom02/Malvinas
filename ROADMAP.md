@@ -70,7 +70,8 @@ Este documento es la lista viva: vamos tildando `[x]` lo que se completa.
 - [x] **Caja de diálogos base** (autoload `Dialogue`, mensajes con E). Falta:
       diálogos con NPCs, ramas/elecciones, retratos.
 - [ ] **Guardar/cargar**, con el guardado como **recurso escaso** (no autosave libre).
-- [ ] **Transición entre salas** → mapa/dungeon explorable de verdad.
+- [x] **Transición entre salas** (puertas + fundido a negro + puntos de aparición).
+      Base lista con 2 salas conectadas; falta armar el dungeon real.
 - [ ] **Loot y crafteo** básico.
 
 ## 🎨 FASE 3 — Producción de contenido (el juego en sí)
