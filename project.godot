@@ -13,7 +13,7 @@ config_version=5
 config/name="Malvinas"
 config/description="Codename Malvinas — RPG survival horror por turnos, Guerra de Malvinas 1982."
 config/version="0.0.1"
-run/main_scene="res://scenes/maps/test_room.tscn"
+run/main_scene="res://scenes/maps/nivel1_trinchera.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
 

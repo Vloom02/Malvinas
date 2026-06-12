@@ -79,8 +79,10 @@ Este documento es la lista viva: vamos tildando `[x]` lo que se completa.
 ## 🎨 FASE 3 — Producción de contenido (el juego en sí)
 
 - [ ] **Guion y narrativa**: la historia de Malvinas, NPCs, **múltiples finales**.
-- [ ] **Diseño de niveles**: arrancar por **Infantería** (trincheras/turba/niebla);
-      después Naval (barco que se hunde), por último Aviación.
+- [~] **Diseño de niveles**: **Infantería** arrancado — primer mini-nivel de 3 salas
+      (trinchera → campo → pozo de mando) con cobertura, niebla, alambre, espectro,
+      sargento (guardado/tienda) y objetivo (radio). Falta: ampliarlo y pulirlo;
+      después Naval (barco que se hunde) y Aviación.
 - [ ] **Arte definitivo** (PixelLab + Leonardo): conscripto pulido, enemigos
       (espectro y más), retratos pintados, tilesets, props, ambientes.
 - [ ] **Audio**: ambiente (viento, frío), SFX, música opresiva.

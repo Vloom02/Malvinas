@@ -23,7 +23,7 @@ var player_attack: int = 18
 
 # --- Estado de combate (a qué enemigo pelear y a dónde volver) ---
 var pending_enemy_path: String = ""
-var return_scene_path: String = "res://scenes/maps/test_room.tscn"
+var return_scene_path: String = "res://scenes/maps/nivel1_trinchera.tscn"
 var _madness_triggered: bool = false
 
 # --- Navegación entre salas ---
@@ -241,11 +241,14 @@ func end_combat() -> void:
 
 func game_over() -> void:
 	new_game()
-	_change_scene("res://scenes/maps/test_room.tscn")
+	_change_scene("res://scenes/maps/nivel1_trinchera.tscn")
 
 func _trigger_madness() -> void:
 	pending_enemy_path = "res://data/enemies/madness.tres"
-	return_scene_path = "res://scenes/maps/test_room.tscn"
+	# Volvés a la sala donde estabas cuando se te quebró la cordura.
+	var cur := get_tree().current_scene
+	if cur != null:
+		return_scene_path = cur.scene_file_path
 	_change_scene("res://scenes/combat/combat.tscn")
 
 func recover_from_madness() -> void:
