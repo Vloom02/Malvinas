@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://dhetdt8km5xc5"]
+[gd_scene load_steps=10 format=3 uid="uid://dhetdt8km5xc5"]
 
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/world/interactable.tscn" id="2"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/world/enemy_encounter.tscn" id="4"]
 [ext_resource type="Script" path="res://scenes/world/ground.gd" id="5"]
 [ext_resource type="TileSet" path="res://assets/tilesets/trinchera/trinchera_tileset.tres" id="6"]
+[ext_resource type="PackedScene" path="res://scenes/ui/darkness.tscn" id="7"]
 
 [sub_resource type="RectangleShape2D" id="WallH"]
 size = Vector2(640, 16)
@@ -77,5 +78,7 @@ position = Vector2(470, 250)
 
 [node name="Player" parent="." instance=ExtResource("1")]
 position = Vector2(320, 200)
+
+[node name="Darkness" parent="." instance=ExtResource("7")]
 
 [node name="HUD" parent="." instance=ExtResource("3")]
