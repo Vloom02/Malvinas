@@ -69,7 +69,9 @@ Este documento es la lista viva: vamos tildando `[x]` lo que se completa.
 - [ ] **IA enemiga**: el enemigo elige qué parte tuya atacar; comportamientos.
 - [x] **Caja de diálogos base** (autoload `Dialogue`, mensajes con E). Falta:
       diálogos con NPCs, ramas/elecciones, retratos.
-- [ ] **Guardar/cargar**, con el guardado como **recurso escaso** (no autosave libre).
+- [x] **Guardar/cargar** reportándote a un NPC (el Sargento): guarda estado e
+      inventario a disco. También es **tienda** (comprar con cigarrillos). Falta:
+      hacer el guardado un recurso más escaso/costoso, y un menú de título.
 - [x] **Transición entre salas** (puertas + fundido a negro + puntos de aparición).
       Base lista con 2 salas conectadas; falta armar el dungeon real.
 - [ ] **Loot y crafteo** básico.

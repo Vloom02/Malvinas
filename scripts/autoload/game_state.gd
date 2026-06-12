@@ -9,6 +9,7 @@ signal sanity_changed(value: int)
 signal player_hp_changed(value: int)
 signal body_changed          # sangrado/frío/infección cambió
 signal inventory_changed     # se agregó/usó un item
+signal money_changed         # cambió la plata (cigarrillos)
 signal player_died
 signal sanity_depleted
 
@@ -43,6 +44,15 @@ const ITEM_VENDA := preload("res://data/items/venda.tres")
 const ITEM_RACION := preload("res://data/items/racion.tres")
 var inventory: Dictionary = {}   # ItemData -> cantidad
 
+# --- Dinero / tienda / guardado ---
+const SAVE_PATH := "user://save.json"
+## Moneda de trueque: cigarrillos (lo que se usaba entre soldados).
+var money: int = 0
+## Items que vende el sargento.
+var shop_items: Array[ItemData] = [ITEM_VENDA, ITEM_RACION]
+## id -> ItemData (para reconstruir el inventario al cargar).
+var items_by_id: Dictionary = {}
+
 # --- Recursos con setter (avisan por señal y respetan límites) ---
 var hunger: int = HUNGER_MAX:
 	set(value):
@@ -70,6 +80,7 @@ var player_hp: int = PLAYER_HP_MAX:
 			player_died.emit()
 
 func _ready() -> void:
+	items_by_id = {"venda": ITEM_VENDA, "racion": ITEM_RACION}
 	_give_starting_items()
 
 # --- Tick del cuerpo: el sangrado drena vida con el tiempo ---
@@ -142,10 +153,69 @@ func _apply_item_effect(item: ItemData) -> bool:
 		_:
 			return false
 
-## Items con los que arrancás la partida.
+## Items y plata con los que arrancás la partida.
 func _give_starting_items() -> void:
 	add_item(ITEM_VENDA, 1)
 	add_item(ITEM_RACION, 1)
+	money = 10
+	money_changed.emit()
+
+# --- Tienda ---
+
+## Compra un item si te alcanza la plata. Devuelve true si se compró.
+func buy_item(item: ItemData) -> bool:
+	if item == null or item.price <= 0 or money < item.price:
+		return false
+	money -= item.price
+	money_changed.emit()
+	add_item(item, 1)
+	return true
+
+# --- Guardar / cargar (te reportás al sargento para guardar) ---
+
+func save_game() -> void:
+	var inv := {}
+	for item in inventory.keys():
+		inv[item.id] = inventory[item]
+	var data := {
+		"scene": get_tree().current_scene.scene_file_path,
+		"hp": player_hp, "hunger": hunger, "sanity": sanity,
+		"bleeding": bleeding, "cold": cold, "infection": infection,
+		"money": money, "inventory": inv,
+	}
+	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	f.store_string(JSON.stringify(data))
+	f.close()
+
+func has_save() -> bool:
+	return FileAccess.file_exists(SAVE_PATH)
+
+func load_game() -> bool:
+	if not has_save():
+		return false
+	var f := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var data = JSON.parse_string(f.get_as_text())
+	f.close()
+	if typeof(data) != TYPE_DICTIONARY:
+		return false
+	_madness_triggered = false
+	bleeding = int(data.get("bleeding", 0))
+	cold = int(data.get("cold", 0))
+	infection = int(data.get("infection", 0))
+	hunger = int(data.get("hunger", HUNGER_MAX))
+	sanity = int(data.get("sanity", SANITY_MAX))
+	player_hp = int(data.get("hp", PLAYER_HP_MAX))
+	money = int(data.get("money", 0))
+	money_changed.emit()
+	inventory.clear()
+	var inv = data.get("inventory", {})
+	for id in inv.keys():
+		if items_by_id.has(id):
+			inventory[items_by_id[id]] = int(inv[id])
+	inventory_changed.emit()
+	next_spawn = ""
+	_change_scene(str(data.get("scene", "res://scenes/maps/test_room.tscn")))
+	return true
 
 ## Reinicia todo para una partida nueva.
 func new_game() -> void:

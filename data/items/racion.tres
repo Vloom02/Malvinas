@@ -9,3 +9,4 @@ display_name = "Ración fría"
 description = "Calma un poco el hambre."
 effect = "ration"
 amount = 30
+price = 2

@@ -11,3 +11,5 @@ class_name ItemData
 @export var effect: String = ""
 ## Cantidad asociada al efecto (ej: cuánto restaura una ración).
 @export var amount: int = 0
+## Precio en cigarrillos (la moneda de trueque). 0 = no se compra.
+@export var price: int = 0

@@ -9,3 +9,4 @@ display_name = "Venda"
 description = "Detiene el sangrado."
 effect = "bandage"
 amount = 0
+price = 3

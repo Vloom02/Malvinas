@@ -1,0 +1,25 @@
+[gd_scene load_steps=4 format=3 uid="uid://cnpc0hambre1"]
+
+[ext_resource type="Script" path="res://scenes/world/npc.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/sargento/rotations/south.png" id="2"]
+
+[sub_resource type="RectangleShape2D" id="shape"]
+size = Vector2(36, 44)
+
+[node name="Npc" type="Area2D"]
+script = ExtResource("1")
+npc_name = "Sargento"
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("shape")
+
+[node name="Label" type="Label" parent="."]
+offset_left = -48.0
+offset_top = -54.0
+offset_right = 48.0
+offset_bottom = -36.0
+text = "Sargento"
+horizontal_alignment = 1

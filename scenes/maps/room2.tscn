@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://broom2hambre1"]
+[gd_scene load_steps=12 format=3 uid="uid://broom2hambre1"]
 
 [ext_resource type="Script" path="res://scenes/world/room.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2"]
@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://scenes/world/interactable.tscn" id="7"]
 [ext_resource type="Resource" path="res://data/items/racion.tres" id="8"]
 [ext_resource type="PackedScene" path="res://scenes/ui/inventory.tscn" id="9"]
+[ext_resource type="PackedScene" path="res://scenes/world/npc.tscn" id="10"]
 
 [sub_resource type="RectangleShape2D" id="WallH"]
 size = Vector2(640, 16)
@@ -76,8 +77,11 @@ position = Vector2(40, 190)
 target_scene = "res://scenes/maps/test_room.tscn"
 target_spawn = "DesdeRoom2"
 
+[node name="Sargento" parent="." instance=ExtResource("10")]
+position = Vector2(330, 110)
+
 [node name="CajaRacion" parent="." instance=ExtResource("7")]
-position = Vector2(440, 180)
+position = Vector2(470, 250)
 message = "Una caja de raciones del ejército. Frías, pero algo es algo."
 gives_item = ExtResource("8")
 give_qty = 2

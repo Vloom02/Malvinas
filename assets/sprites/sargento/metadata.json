@@ -1,0 +1,32 @@
+{
+  "group_id": null,
+  "states": [
+    {
+      "character": {
+        "id": "68f92944-22ee-444a-a2f4-0760002dc1ff",
+        "name": "Sargento",
+        "prompt": "older Argentine army sergeant, grey stubble beard, worn olive-green uniform with insignia, stern tired weathered face, carrying a supply satchel, dark muted desaturated colors, gritty",
+        "size": {
+          "width": 68,
+          "height": 68
+        },
+        "template_id": "mannequin",
+        "directions": 4,
+        "view": "low top-down",
+        "created_at": "2026-06-12T19:33:33.622495+00:00"
+      },
+      "folder": "Sargento",
+      "frames": {
+        "rotations": {
+          "south": "Sargento/rotations/south.png",
+          "west": "Sargento/rotations/west.png",
+          "east": "Sargento/rotations/east.png",
+          "north": "Sargento/rotations/north.png"
+        },
+        "animations": {}
+      }
+    }
+  ],
+  "export_version": "3.0",
+  "export_date": "2026-06-12T19:35:45.713662"
+}
