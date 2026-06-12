@@ -1,0 +1,32 @@
+{
+  "group_id": null,
+  "states": [
+    {
+      "character": {
+        "id": "48661102-139d-478a-93bd-6bbd3bbf0d92",
+        "name": "Espectro",
+        "prompt": "ugly ghostly wraith, gaunt emaciated translucent pale figure, hollow black eye sockets, gaping screaming mouth, tattered torn shroud, eerie unsettling horror, dark muted desaturated colors, faint cold glow",
+        "size": {
+          "width": 68,
+          "height": 68
+        },
+        "template_id": "mannequin",
+        "directions": 4,
+        "view": "low top-down",
+        "created_at": "2026-06-12T18:32:05.149353+00:00"
+      },
+      "folder": "Espectro",
+      "frames": {
+        "rotations": {
+          "south": "Espectro/rotations/south.png",
+          "west": "Espectro/rotations/west.png",
+          "east": "Espectro/rotations/east.png",
+          "north": "Espectro/rotations/north.png"
+        },
+        "animations": {}
+      }
+    }
+  ],
+  "export_version": "3.0",
+  "export_date": "2026-06-12T18:36:00.658765"
+}

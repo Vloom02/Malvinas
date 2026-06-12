@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1")
-display_name = "Necrófago"
+display_name = "Espectro"
 body_parts = {
 "brazo_der": 18,
 "brazo_izq": 18,
