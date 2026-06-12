@@ -65,7 +65,8 @@ Este documento es la lista viva: vamos tildando `[x]` lo que se completa.
 - [ ] **Más usos del dado**: saves (infección/frío/cordura), forzar/sigilo, primeros
       auxilios bajo presión.
 - [ ] **IA enemiga**: el enemigo elige qué parte tuya atacar; comportamientos.
-- [ ] **Sistema de diálogos** (cajas de texto, lore fragmentado estilo F&H).
+- [x] **Caja de diálogos base** (autoload `Dialogue`, mensajes con E). Falta:
+      diálogos con NPCs, ramas/elecciones, retratos.
 - [ ] **Guardar/cargar**, con el guardado como **recurso escaso** (no autosave libre).
 - [ ] **Transición entre salas** → mapa/dungeon explorable de verdad.
 - [ ] **Loot y crafteo** básico.

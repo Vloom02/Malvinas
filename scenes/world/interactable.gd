@@ -40,11 +40,14 @@ func _on_body_exited(body: Node) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _player_inside and event.is_action_pressed("interact"):
-		print("[Interacción] %s" % message)
+		get_viewport().set_input_as_handled()
+		var text := message
 		if sanity_cost > 0:
 			GameState.drain_sanity(sanity_cost)
-			print("[Mundo] Algo se rompe en tu mente... (-%d cordura)" % sanity_cost)
+			text += "\n\n(Algo se quiebra en tu mente. -%d cordura.)" % sanity_cost
 		if gives_item != null and not _item_taken:
 			GameState.add_item(gives_item, give_qty)
 			_item_taken = true
+			text += "\n\nObtenés: %s x%d." % [gives_item.display_name, give_qty]
+		Dialogue.say(text)
 		interacted.emit()

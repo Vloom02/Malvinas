@@ -31,16 +31,18 @@ func _on_body_entered(body: Node) -> void:
 	_used = true
 
 	var r := Dice.check(reflex_mod, dodge_dc)
-	print("[Peligro] %s  (dado %d + %d = %d  vs  DC %d)" % [
-		message, r["die"], r["modifier"], r["total"], r["dc"]])
+	var text := "%s\n\nReflejos: [ d20 %d + %d = %d ]  vs  %d" % [
+		message, r["die"], r["modifier"], r["total"], dodge_dc]
 
 	if r["success"]:
 		if r["crit"]:
-			print("[Peligro] ¡CRÍTICO! Saltás la enredadera con elegancia.")
+			text += "\n¡Crítico! La saltás con elegancia."
 		else:
-			print("[Peligro] La esquivás. Sin daño.")
+			text += "\nLa esquivás justo. Sin daño."
 	else:
 		GameState.apply_bleeding(bleed_stacks)
 		if r["fumble"]:
-			print("[Peligro] ¡PIFIA! Te enredás feo y te clavás las espinas.")
-		print("[Peligro] Te cortás: empezás a SANGRAR (mirá los bordes en rojo).")
+			text += "\n¡Pifia! Te enredás feo."
+		text += "\nTe clavás las espinas: empezás a SANGRAR."
+
+	Dialogue.say(text)

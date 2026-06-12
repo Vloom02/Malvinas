@@ -52,3 +52,14 @@ func _reflect_body() -> void:
 	var redness := clampf(GameState.bleeding * 0.12, 0.0, 0.5)
 	var blueness := clampf(GameState.cold * 0.004, 0.0, 0.35)
 	sprite.modulate = Color(1.0 - blueness, 1.0 - redness - blueness * 0.3, 1.0 - redness)
+
+func _unhandled_input(event: InputEvent) -> void:
+	# Opción de tirar el dado (R): muestra el resultado en la ventana de diálogos.
+	if event.is_action_pressed("roll_dice"):
+		var n := Dice.roll(20)
+		var comment := "Un tiro normal."
+		if n == 20:
+			comment = "¡Crítico! La suerte está de tu lado."
+		elif n == 1:
+			comment = "Pifia. Mal presagio..."
+		Dialogue.say("Tirás el dado...\n\n[ d20 ]   =   %d\n%s" % [n, comment])
