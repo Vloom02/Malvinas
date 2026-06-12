@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://dhetdt8km5xc5"]
+[gd_scene load_steps=12 format=3 uid="uid://dhetdt8km5xc5"]
 
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/world/interactable.tscn" id="2"]
@@ -7,6 +7,8 @@
 [ext_resource type="TileSet" path="res://assets/tilesets/trinchera/trinchera_tileset.tres" id="5"]
 [ext_resource type="PackedScene" path="res://scenes/ui/darkness.tscn" id="6"]
 [ext_resource type="PackedScene" path="res://scenes/world/hazard.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://scenes/ui/inventory.tscn" id="8"]
+[ext_resource type="Resource" path="res://data/items/venda.tres" id="9"]
 
 [sub_resource type="RectangleShape2D" id="WallH"]
 size = Vector2(640, 16)
@@ -67,6 +69,9 @@ shape = SubResource("WallV")
 
 [node name="Cofre" parent="." instance=ExtResource("2")]
 position = Vector2(470, 110)
+message = "Un cofre viejo. Adentro hay vendas."
+gives_item = ExtResource("9")
+give_qty = 2
 
 [node name="Altar" parent="." instance=ExtResource("2")]
 position = Vector2(170, 110)
@@ -83,3 +88,5 @@ position = Vector2(470, 250)
 position = Vector2(320, 190)
 
 [node name="Darkness" parent="." instance=ExtResource("6")]
+
+[node name="Inventory" parent="." instance=ExtResource("8")]

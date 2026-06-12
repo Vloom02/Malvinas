@@ -8,6 +8,7 @@ signal hunger_changed(value: int)
 signal sanity_changed(value: int)
 signal player_hp_changed(value: int)
 signal body_changed          # sangrado/frío/infección cambió
+signal inventory_changed     # se agregó/usó un item
 signal player_died
 signal sanity_depleted
 
@@ -31,6 +32,11 @@ var infection: int = 0  # infección (0-100) de heridas sin tratar
 
 const BLEED_INTERVAL := 1.5   # cada cuántos segundos drena el sangrado
 var _bleed_timer: float = 0.0
+
+# --- Inventario ---
+const ITEM_VENDA := preload("res://data/items/venda.tres")
+const ITEM_RACION := preload("res://data/items/racion.tres")
+var inventory: Dictionary = {}   # ItemData -> cantidad
 
 # --- Recursos con setter (avisan por señal y respetan límites) ---
 var hunger: int = HUNGER_MAX:
@@ -57,6 +63,9 @@ var player_hp: int = PLAYER_HP_MAX:
 		player_hp_changed.emit(player_hp)
 		if player_hp <= 0:
 			player_died.emit()
+
+func _ready() -> void:
+	_give_starting_items()
 
 # --- Tick del cuerpo: el sangrado drena vida con el tiempo ---
 func _process(delta: float) -> void:
@@ -91,6 +100,48 @@ func bandage() -> void:
 	body_changed.emit()
 	print("[Cuerpo] Te vendás. El sangrado se detiene.")
 
+# --- Inventario ---
+
+## Agrega `qty` unidades de un item al inventario.
+func add_item(item: ItemData, qty: int = 1) -> void:
+	if item == null:
+		return
+	inventory[item] = int(inventory.get(item, 0)) + qty
+	inventory_changed.emit()
+	print("[Inventario] +%d %s" % [qty, item.display_name])
+
+## Usa un item: aplica su efecto y descuenta uno si se consumió.
+## Devuelve true si se usó, false si no tenía sentido (no se gasta).
+func use_item(item: ItemData) -> bool:
+	if int(inventory.get(item, 0)) <= 0:
+		return false
+	var consumed := _apply_item_effect(item)
+	if consumed:
+		inventory[item] -= 1
+		if inventory[item] <= 0:
+			inventory.erase(item)
+		inventory_changed.emit()
+	return consumed
+
+func _apply_item_effect(item: ItemData) -> bool:
+	match item.effect:
+		"bandage":
+			if bleeding <= 0:
+				return false  # no gastar venda si no estás sangrando
+			bandage()
+			return true
+		"ration":
+			hunger += item.amount
+			print("[Inventario] Comés. Hambre: %d/%d" % [hunger, HUNGER_MAX])
+			return true
+		_:
+			return false
+
+## Items con los que arrancás la partida.
+func _give_starting_items() -> void:
+	add_item(ITEM_VENDA, 1)
+	add_item(ITEM_RACION, 1)
+
 ## Reinicia todo para una partida nueva.
 func new_game() -> void:
 	_madness_triggered = false
@@ -100,6 +151,8 @@ func new_game() -> void:
 	hunger = HUNGER_MAX
 	sanity = SANITY_MAX
 	player_hp = PLAYER_HP_MAX
+	inventory.clear()
+	_give_starting_items()
 
 # --- Puente de combate (combate es otra escena) ---
 

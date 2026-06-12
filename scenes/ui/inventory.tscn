@@ -1,0 +1,32 @@
+[gd_scene format=3 uid="uid://b0avj8ips1d5w"]
+
+[ext_resource type="Script" path="res://scenes/ui/inventory.gd" id="1"]
+
+[node name="Inventory" type="CanvasLayer"]
+process_mode = 3
+layer = 3
+script = ExtResource("1")
+
+[node name="Dim" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.55)
+
+[node name="Panel" type="Panel" parent="."]
+offset_left = 150.0
+offset_top = 60.0
+offset_right = 490.0
+offset_bottom = 300.0
+
+[node name="Title" type="Label" parent="Panel"]
+offset_left = 12.0
+offset_top = 8.0
+offset_right = 328.0
+offset_bottom = 30.0
+text = "Inventario   (I para cerrar)"
+
+[node name="List" type="VBoxContainer" parent="Panel"]
+offset_left = 12.0
+offset_top = 36.0
+offset_right = 328.0
+offset_bottom = 228.0
