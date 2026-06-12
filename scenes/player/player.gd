@@ -22,6 +22,7 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 	_update_animation(direction)
+	_reflect_body()
 
 	# Hambre al caminar.
 	if direction != Vector2.ZERO:
@@ -44,3 +45,10 @@ func _update_animation(direction: Vector2) -> void:
 		_facing = "south" if direction.y > 0 else "north"
 
 	sprite.play("walk_" + _facing)
+
+## El cuerpo refleja el estado (pilar de diseño): al sangrar, el conscripto
+## se tiñe de rojo; con frío, de azul. Sin barras: se ve en él.
+func _reflect_body() -> void:
+	var redness := clampf(GameState.bleeding * 0.12, 0.0, 0.5)
+	var blueness := clampf(GameState.cold * 0.004, 0.0, 0.35)
+	sprite.modulate = Color(1.0 - blueness, 1.0 - redness - blueness * 0.3, 1.0 - redness)

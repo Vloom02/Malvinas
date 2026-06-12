@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+Dice="*res://scripts/systems/dice.gd"
 GameState="*res://scripts/autoload/game_state.gd"
 
 [display]

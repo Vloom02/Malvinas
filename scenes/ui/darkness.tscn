@@ -1,18 +1,35 @@
-[gd_scene load_steps=3 format=3 uid="uid://darkness0hambre1"]
+[gd_scene load_steps=5 format=3 uid="uid://blnomdluqg8o5"]
 
 [ext_resource type="Shader" path="res://scenes/ui/vignette.gdshader" id="1"]
+[ext_resource type="Script" path="res://scenes/ui/darkness.gd" id="2"]
 
-[sub_resource type="ShaderMaterial" id="mat"]
+[sub_resource type="ShaderMaterial" id="matDark"]
 shader = ExtResource("1")
 shader_parameter/radius = 0.26
 shader_parameter/softness = 0.32
 shader_parameter/darkness = 0.96
+shader_parameter/tint = Vector3(0, 0, 0)
+
+[sub_resource type="ShaderMaterial" id="matBlood"]
+shader = ExtResource("1")
+shader_parameter/radius = 0.18
+shader_parameter/softness = 0.55
+shader_parameter/darkness = 0.0
+shader_parameter/tint = Vector3(0.5, 0, 0)
 
 [node name="Darkness" type="CanvasLayer"]
 layer = 1
+script = ExtResource("2")
 
 [node name="Vignette" type="ColorRect" parent="."]
-material = SubResource("mat")
+material = SubResource("matDark")
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 1)
+mouse_filter = 2
+
+[node name="Blood" type="ColorRect" parent="."]
+material = SubResource("matBlood")
 anchor_right = 1.0
 anchor_bottom = 1.0
 color = Color(0, 0, 0, 1)

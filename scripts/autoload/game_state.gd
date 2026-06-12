@@ -1,31 +1,38 @@
 extends Node
 ## Singleton (autoload) con el estado global de la partida.
-## Vive entre escenas: stats del jugador, hambre, cordura, vida, y el
-## "puente" para entrar/salir de combate (que es otra escena).
+## Vive entre escenas. SIN HUD: estos valores se reflejan en pantalla/cuerpo
+## de forma diegética (ver scenes/ui/darkness.gd), no en barras.
 
-# --- Señales: otros sistemas (UI, combate) se suscriben a estos cambios ---
+# --- Señales (las usan los efectos diegéticos y el combate) ---
 signal hunger_changed(value: int)
 signal sanity_changed(value: int)
 signal player_hp_changed(value: int)
+signal body_changed          # sangrado/frío/infección cambió
 signal player_died
 signal sanity_depleted
 
-# --- Topes de los recursos ---
+# --- Topes ---
 const HUNGER_MAX := 100
 const SANITY_MAX := 100
 const PLAYER_HP_MAX := 100
 
-# --- Stats simples del jugador ---
+# --- Stats del jugador ---
 var player_attack: int = 18
 
-# --- Estado de combate (qué enemigo pelear y a dónde volver después) ---
+# --- Estado de combate (a qué enemigo pelear y a dónde volver) ---
 var pending_enemy_path: String = ""
 var return_scene_path: String = "res://scenes/maps/test_room.tscn"
-
-# Evita que la locura se dispare en bucle mientras la cordura está en 0.
 var _madness_triggered: bool = false
 
-# --- Recursos con setter: al cambiar, avisan por señal y chequean límites ---
+# --- Cuerpo: heridas persistentes (pilar de diseño) ---
+var bleeding: int = 0   # cantidad de heridas sangrando; drena vida con el tiempo
+var cold: int = 0       # hipotermia (0-100), la sube el ambiente helado
+var infection: int = 0  # infección (0-100) de heridas sin tratar
+
+const BLEED_INTERVAL := 1.5   # cada cuántos segundos drena el sangrado
+var _bleed_timer: float = 0.0
+
+# --- Recursos con setter (avisan por señal y respetan límites) ---
 var hunger: int = HUNGER_MAX:
 	set(value):
 		hunger = clampi(value, 0, HUNGER_MAX)
@@ -51,54 +58,70 @@ var player_hp: int = PLAYER_HP_MAX:
 		if player_hp <= 0:
 			player_died.emit()
 
-# --- Acciones que llaman otros scripts ---
+# --- Tick del cuerpo: el sangrado drena vida con el tiempo ---
+func _process(delta: float) -> void:
+	if bleeding > 0 and player_hp > 0:
+		_bleed_timer += delta
+		while _bleed_timer >= BLEED_INTERVAL:
+			_bleed_timer -= BLEED_INTERVAL
+			player_hp -= bleeding   # cada herida sangrante = 1 de daño por tick
 
-## Hambre que baja al caminar.
+# --- Acciones ---
+
+## Hambre/frío que baja al caminar.
 func spend_step() -> void:
 	hunger -= 1
 
-## Baja la cordura (la usa el altar maldito, sustos, oscuridad, etc.).
+## Baja la cordura (altar, sustos, oscuridad...).
 func drain_sanity(amount: int) -> void:
 	sanity -= amount
 
-## Daño al jugador (lo usa el combate).
+## Daño directo al jugador (combate).
 func damage_player(amount: int) -> void:
 	player_hp -= amount
+
+## Agrega heridas sangrantes (lo usan los peligros tipo enredadera).
+func apply_bleeding(stacks: int) -> void:
+	bleeding = clampi(bleeding + stacks, 0, 10)
+	body_changed.emit()
+
+## Venda: corta TODO el sangrado (item de curación).
+func bandage() -> void:
+	bleeding = 0
+	body_changed.emit()
+	print("[Cuerpo] Te vendás. El sangrado se detiene.")
 
 ## Reinicia todo para una partida nueva.
 func new_game() -> void:
 	_madness_triggered = false
+	bleeding = 0
+	cold = 0
+	infection = 0
 	hunger = HUNGER_MAX
 	sanity = SANITY_MAX
 	player_hp = PLAYER_HP_MAX
 
-# --- Puente de combate (combate es otra escena: scenes/combat/combat.tscn) ---
+# --- Puente de combate (combate es otra escena) ---
 
-## Inicia un combate contra el enemigo de `enemy_path`, guardando a dónde volver.
 func start_combat(enemy_path: String, from_scene: String) -> void:
 	pending_enemy_path = enemy_path
 	return_scene_path = from_scene
 	_change_scene("res://scenes/combat/combat.tscn")
 
-## Vuelve al mundo después de ganar un combate.
 func end_combat() -> void:
 	_change_scene(return_scene_path)
 
-## Game over: reinicia la partida y vuelve a la sala.
 func game_over() -> void:
 	new_game()
 	_change_scene("res://scenes/maps/test_room.tscn")
 
-## Cuando la cordura toca 0: pesadilla forzada.
 func _trigger_madness() -> void:
 	pending_enemy_path = "res://data/enemies/madness.tres"
 	return_scene_path = "res://scenes/maps/test_room.tscn"
 	_change_scene("res://scenes/combat/combat.tscn")
 
-## Tras sobrevivir a la pesadilla, recuperás algo de cordura.
 func recover_from_madness() -> void:
 	sanity = int(SANITY_MAX / 2.0)
 
-## Cambia de escena de forma diferida (seguro de llamar desde señales/input).
 func _change_scene(path: String) -> void:
 	get_tree().call_deferred("change_scene_to_file", path)
