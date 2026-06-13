@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="EnemyData" format=3 uid="uid://cle1cprg4y2yw"]
 
-[ext_resource type="Script" path="res://data/enemy_data.gd" id="1"]
+[ext_resource type="Script" uid="uid://bfhdwmuykvt85" path="res://data/enemy_data.gd" id="1"]
 
 [resource]
 script = ExtResource("1")
@@ -16,3 +16,9 @@ body_parts = {
 attack = 12
 defense = 3
 loot_table = Array[String](["carne_podrida", "diente"])
+is_boss = false
+power_name = ""
+power_damage = 0
+power_dc = 0
+power_chance = 0.0
+reward = 4
