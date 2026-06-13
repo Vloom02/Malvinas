@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/enemy_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+display_name = "Soldado enloquecido"
+body_parts = {
+"brazo_der": 16,
+"brazo_izq": 16,
+"cabeza": 24,
+"pierna_der": 16,
+"pierna_izq": 16,
+"torso": 48
+}
+attack = 14
+defense = 4
+loot_table = Array[String]([])
+is_boss = false
+power_name = ""
+power_damage = 0
+power_dc = 0
+power_chance = 0.0
+reward = 5

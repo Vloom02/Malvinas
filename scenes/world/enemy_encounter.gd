@@ -13,6 +13,10 @@ class_name EnemyEncounter
 @export var chase_range: float = 150.0
 ## Id único para recordar que lo mataste (si lo dejás vacío, reaparece siempre).
 @export var unique_id: String = ""
+## Sprite a mostrar (si lo dejás vacío, usa el de la escena).
+@export var sprite_texture: Texture2D
+## Texto del cartel (si lo dejás vacío, usa el de la escena).
+@export var label_text: String = ""
 
 var _triggered: bool = false
 
@@ -21,6 +25,10 @@ func _ready() -> void:
 	if unique_id != "" and GameState.has_flag("dead_" + unique_id):
 		queue_free()
 		return
+	if sprite_texture != null:
+		$Sprite2D.texture = sprite_texture
+	if label_text != "":
+		$Label.text = label_text
 	body_entered.connect(_on_body_entered)
 
 func _physics_process(delta: float) -> void:

@@ -17,6 +17,8 @@
 [ext_resource type="Texture2D" path="res://assets/props/tussock.png" id="15"]
 [ext_resource type="Texture2D" path="res://assets/props/gorse.png" id="16"]
 [ext_resource type="PackedScene" path="res://scenes/world/icy_bog.tscn" id="17"]
+[ext_resource type="PackedScene" path="res://scenes/world/interactable.tscn" id="18"]
+[ext_resource type="Texture2D" path="res://assets/sprites/soldado/rotations/south.png" id="19"]
 
 [sub_resource type="RectangleShape2D" id="WallH"]
 size = Vector2(640, 16)
@@ -120,6 +122,18 @@ position = Vector2(440, 235)
 position = Vector2(360, 255)
 unique_id = "campo_espectro"
 
+[node name="Soldado" parent="." instance=ExtResource("10")]
+position = Vector2(300, 105)
+enemy_path = "res://data/enemies/soldado.tres"
+sprite_texture = ExtResource("19")
+label_text = "Soldado"
+unique_id = "campo_soldado"
+
+[node name="Palanca" parent="." instance=ExtResource("18")]
+position = Vector2(560, 285)
+message = "Una palanca de hierro oxidada en un poste. La accionás con todo tu peso.\nUn chirrido metálico responde a lo lejos."
+set_flag_on_use = "abrir_pozo"
+
 [node name="PuertaTrinchera" parent="." instance=ExtResource("7")]
 position = Vector2(40, 190)
 target_scene = "res://scenes/maps/nivel1_trinchera.tscn"
@@ -129,6 +143,9 @@ target_spawn = "DesdeCampo"
 position = Vector2(600, 190)
 target_scene = "res://scenes/maps/nivel1_pozo.tscn"
 target_spawn = "Entrada"
+locked = true
+unlock_flag = "abrir_pozo"
+locked_message = "La escotilla al pozo está trabada. Tiene que haber una palanca por acá."
 
 [node name="Player" parent="." instance=ExtResource("1")]
 position = Vector2(110, 190)

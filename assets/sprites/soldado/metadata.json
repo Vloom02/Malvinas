@@ -1,0 +1,32 @@
+{
+  "group_id": null,
+  "states": [
+    {
+      "character": {
+        "id": "6c1ecc81-79cc-4728-8c6d-aee4d15e4d9a",
+        "name": "SoldadoLoco",
+        "prompt": "deranged frostbitten enemy soldier, hollow sunken eyes, tattered muddy uniform and helmet, snarling, gripping a bayonet, Falklands war, dark muted desaturated colors, gritty horror",
+        "size": {
+          "width": 68,
+          "height": 68
+        },
+        "template_id": "mannequin",
+        "directions": 4,
+        "view": "low top-down",
+        "created_at": "2026-06-13T02:44:37.994096+00:00"
+      },
+      "folder": "SoldadoLoco",
+      "frames": {
+        "rotations": {
+          "south": "SoldadoLoco/rotations/south.png",
+          "west": "SoldadoLoco/rotations/west.png",
+          "east": "SoldadoLoco/rotations/east.png",
+          "north": "SoldadoLoco/rotations/north.png"
+        },
+        "animations": {}
+      }
+    }
+  ],
+  "export_version": "3.0",
+  "export_date": "2026-06-13T02:46:37.443260"
+}
