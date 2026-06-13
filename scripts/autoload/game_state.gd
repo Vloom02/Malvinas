@@ -330,6 +330,11 @@ func end_combat() -> void:
 		pending_kill_id = ""
 	_change_scene(return_scene_path)
 
+## Huiste: volvés al mundo pero el enemigo sigue vivo.
+func flee_combat() -> void:
+	pending_kill_id = ""
+	_change_scene(return_scene_path)
+
 func game_over() -> void:
 	new_game()
 	_change_scene("res://scenes/maps/nivel1_trinchera.tscn")

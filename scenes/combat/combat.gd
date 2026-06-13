@@ -30,6 +30,7 @@ var is_player_turn: bool = true
 var combat_over: bool = false
 var _pending_dodge: bool = false   # esperando que esquives un poder
 var _power_cooldown: bool = false  # el jefe no encadena poderes
+var _enemy_staggered: bool = false # le destruiste una parte: pierde el turno
 
 func _ready() -> void:
 	var path := GameState.pending_enemy_path
@@ -85,6 +86,10 @@ func _build_action_buttons() -> void:
 	heal.text = "Vendarte"
 	heal.pressed.connect(_on_bandage)
 	actions.add_child(heal)
+	var flee := Button.new()
+	flee.text = "Huir (dado)"
+	flee.pressed.connect(_on_flee)
+	actions.add_child(flee)
 
 func _clear_actions() -> void:
 	for c in actions.get_children():
@@ -137,7 +142,8 @@ func _on_attack_part(part: String) -> void:
 		_log("Golpeás %s: %d de daño." % [part, dmg])
 		_update_part_label(part)
 		if parts_hp[part] == 0:
-			_log("¡Destruiste %s!" % part)
+			_log("¡Destruiste %s! Queda tambaleándose." % part)
+			_enemy_staggered = true
 
 	if _enemy_dead():
 		_win()
@@ -164,6 +170,13 @@ func _on_bandage() -> void:
 
 func _enemy_turn() -> void:
 	if combat_over:
+		return
+
+	# Si le destruiste una parte, está aturdido: pierde el turno.
+	if _enemy_staggered:
+		_enemy_staggered = false
+		_log("%s se tambalea y pierde el turno." % enemy.display_name)
+		is_player_turn = true
 		return
 
 	# ¿El jefe carga un poder? → telegrafía y tenés que esquivar (tu turno).
@@ -267,6 +280,26 @@ func _on_risky_attack() -> void:
 		_lose()
 		return
 	_enemy_turn()
+
+## Huir: tirada de reflejos. Si sale, escapás (el enemigo queda vivo). Si no,
+## te alcanza y juega su turno.
+func _on_flee() -> void:
+	if combat_over or not is_player_turn or _pending_dodge:
+		return
+	is_player_turn = false
+	var r := Dice.check(3, 12)
+	var text := "Intentás huir...\n[ d20 %d + 3 = %d ]  vs  12\n\n" % [r["die"], r["total"]]
+	if r["success"]:
+		combat_over = true
+		text += "¡Escapás! (%s sigue al acecho)" % enemy.display_name
+		Dialogue.say(text)
+		await Dialogue.finished
+		GameState.flee_combat()
+	else:
+		text += "No llegás. %s te alcanza." % enemy.display_name
+		Dialogue.say(text)
+		await Dialogue.finished
+		_enemy_turn()
 
 ## Devuelve la parte viva con más HP (el "ataque arriesgado" pega a la más dura).
 func _strongest_part() -> String:
