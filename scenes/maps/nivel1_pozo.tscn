@@ -14,6 +14,7 @@
 [ext_resource type="Texture2D" path="res://assets/props/sandbags.png" id="12"]
 [ext_resource type="Texture2D" path="res://assets/props/fuel_drum.png" id="13"]
 [ext_resource type="Texture2D" path="res://assets/props/grave_cross.png" id="14"]
+[ext_resource type="PackedScene" path="res://scenes/world/ending.tscn" id="15"]
 
 [sub_resource type="RectangleShape2D" id="WallH"]
 size = Vector2(640, 16)
@@ -112,9 +113,8 @@ target_spawn = "DesdePozo"
 [node name="Sargento" parent="." instance=ExtResource("9")]
 position = Vector2(320, 120)
 
-[node name="Radio" parent="." instance=ExtResource("10")]
+[node name="Radio" parent="." instance=ExtResource("15")]
 position = Vector2(480, 250)
-message = "La radio de campaña, milagrosamente intacta. Transmitís tu posición... y rezás.\n\n[ Fin de la demo del Sector Infantería ]"
 
 [node name="Escotilla" parent="." instance=ExtResource("7")]
 position = Vector2(590, 300)

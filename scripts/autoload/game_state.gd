@@ -45,6 +45,13 @@ var danger: int = 0
 func advance_danger(n: int = 1) -> void:
 	danger += n
 
+## Diario: entradas de lore que vas juntando (se ven con J).
+var journal: Array = []
+
+func add_journal(entry: String) -> void:
+	if entry != "" and not journal.has(entry):
+		journal.append(entry)
+
 func set_flag(id: String) -> void:
 	flags[id] = true
 
@@ -301,7 +308,7 @@ func save_game() -> void:
 		"hp": player_hp, "hunger": hunger, "sanity": sanity,
 		"bleeding": bleeding, "cold": cold, "infection": infection,
 		"money": money, "inventory": inv, "flags": flags,
-		"parts": body_parts_state, "danger": danger,
+		"parts": body_parts_state, "danger": danger, "journal": journal,
 	}
 	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	f.store_string(JSON.stringify(data))
@@ -328,6 +335,8 @@ func load_game() -> bool:
 	money = int(data.get("money", 0))
 	money_changed.emit()
 	danger = int(data.get("danger", 0))
+	var jr = data.get("journal", [])
+	journal = jr if typeof(jr) == TYPE_ARRAY else []
 	inventory.clear()
 	var inv = data.get("inventory", {})
 	for id in inv.keys():
@@ -351,6 +360,7 @@ func new_game() -> void:
 	flags.clear()
 	pending_kill_id = ""
 	danger = 0
+	journal.clear()
 	bleeding = 0
 	cold = 0
 	infection = 0

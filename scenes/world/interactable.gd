@@ -23,6 +23,8 @@ class_name Interactable
 @export var pickup_id: String = ""
 ## Si lo seteás, al interactuar marca este flag (sirve de palanca/llave para puertas).
 @export var set_flag_on_use: String = ""
+## Si lo seteás, al interactuar suma esta entrada al diario (lore).
+@export var journal_entry: String = ""
 
 signal interacted
 
@@ -51,6 +53,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		var text := message
 		if set_flag_on_use != "":
 			GameState.set_flag(set_flag_on_use)
+		if journal_entry != "":
+			GameState.add_journal(journal_entry)
 		if sanity_cost > 0:
 			GameState.drain_sanity(sanity_cost)
 			text += "\n\n(Algo se quiebra en tu mente. -%d cordura.)" % sanity_cost

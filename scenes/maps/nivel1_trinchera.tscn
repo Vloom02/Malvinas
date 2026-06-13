@@ -121,6 +121,7 @@ message = "Un compañero caído, congelado en el barro. En su mano, vendas. Las 
 gives_item = ExtResource("11")
 give_qty = 1
 pickup_id = "trinchera_cuerpo"
+journal_entry = "Un conscripto muerto de frío en la trinchera. Tenía tu edad. Le saqué las vendas."
 
 [node name="Alambre" parent="." instance=ExtResource("9")]
 position = Vector2(360, 300)
