@@ -40,3 +40,6 @@ class_name EnemyData
 @export var power_dc: int = 12
 ## Probabilidad de que el jefe use el poder en su turno (0.0 a 1.0).
 @export var power_chance: float = 0.4
+
+## Cigarrillos (plata) que deja al derrotarlo.
+@export var reward: int = 3

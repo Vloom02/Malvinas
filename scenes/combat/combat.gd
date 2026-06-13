@@ -283,6 +283,10 @@ func _refresh_player_info() -> void:
 func _win() -> void:
 	combat_over = true
 	_log("Derrotaste a %s." % enemy.display_name)
+	if enemy.reward > 0:
+		GameState.money += enemy.reward
+		GameState.money_changed.emit()
+		_log("Le revisás los bolsillos: +%d cigarrillos." % enemy.reward)
 	if GameState.pending_enemy_path.contains("madness"):
 		GameState.recover_from_madness()
 		_log("Recuperás algo de cordura...")
