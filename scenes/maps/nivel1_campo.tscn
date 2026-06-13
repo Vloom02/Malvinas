@@ -118,6 +118,7 @@ position = Vector2(440, 235)
 
 [node name="Espectro" parent="." instance=ExtResource("10")]
 position = Vector2(360, 255)
+unique_id = "campo_espectro"
 
 [node name="PuertaTrinchera" parent="." instance=ExtResource("7")]
 position = Vector2(40, 190)

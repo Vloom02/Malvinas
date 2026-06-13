@@ -120,6 +120,7 @@ position = Vector2(170, 120)
 message = "Un compañero caído, congelado en el barro. En su mano, vendas. Las necesitás más que él."
 gives_item = ExtResource("11")
 give_qty = 1
+pickup_id = "trinchera_cuerpo"
 
 [node name="Alambre" parent="." instance=ExtResource("9")]
 position = Vector2(360, 300)

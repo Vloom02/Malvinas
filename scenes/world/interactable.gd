@@ -19,6 +19,8 @@ class_name Interactable
 @export var gives_item: ItemData = null
 ## Cuántas unidades del item entrega.
 @export var give_qty: int = 1
+## Id único para recordar que ya lo agarraste (vacío = no se recuerda).
+@export var pickup_id: String = ""
 
 signal interacted
 
@@ -28,6 +30,9 @@ var _item_taken: bool = false
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
+	# Si ya agarraste esto en la partida, queda vacío.
+	if pickup_id != "" and GameState.has_flag("taken_" + pickup_id):
+		_item_taken = true
 
 func _on_body_entered(body: Node) -> void:
 	if body.is_in_group("player"):
@@ -48,6 +53,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		if gives_item != null and not _item_taken:
 			GameState.add_item(gives_item, give_qty)
 			_item_taken = true
+			if pickup_id != "":
+				GameState.set_flag("taken_" + pickup_id)
 			text += "\n\nObtenés: %s x%d." % [gives_item.display_name, give_qty]
 		Dialogue.say(text)
 		interacted.emit()

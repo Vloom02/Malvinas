@@ -11,10 +11,16 @@ class_name EnemyEncounter
 @export var chase_speed: float = 42.0
 ## A qué distancia te empieza a perseguir.
 @export var chase_range: float = 150.0
+## Id único para recordar que lo mataste (si lo dejás vacío, reaparece siempre).
+@export var unique_id: String = ""
 
 var _triggered: bool = false
 
 func _ready() -> void:
+	# Si ya lo mataste en esta partida, no reaparece.
+	if unique_id != "" and GameState.has_flag("dead_" + unique_id):
+		queue_free()
+		return
 	body_entered.connect(_on_body_entered)
 
 func _physics_process(delta: float) -> void:
@@ -33,5 +39,6 @@ func _on_body_entered(body: Node) -> void:
 		return
 	if body.is_in_group("player"):
 		_triggered = true
+		GameState.pending_kill_id = unique_id
 		var from_scene := get_tree().current_scene.scene_file_path
 		GameState.start_combat(enemy_path, from_scene)

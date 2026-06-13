@@ -31,6 +31,19 @@ var _madness_triggered: bool = false
 ## a la próxima sala. "" = usar la posición por defecto de la escena.
 var next_spawn: String = ""
 
+# --- Estado persistente del mundo ---
+## Flags arbitrarios que recuerdan cosas: enemigos muertos, items agarrados,
+## palancas, decisiones de diálogo. Se guardan/cargan. Ej: flags["dead_x"] = true.
+var flags: Dictionary = {}
+## Id del enemigo que estás peleando (para marcarlo muerto si ganás).
+var pending_kill_id: String = ""
+
+func set_flag(id: String) -> void:
+	flags[id] = true
+
+func has_flag(id: String) -> bool:
+	return flags.get(id, false)
+
 # --- Cuerpo: heridas persistentes (pilar de diseño) ---
 var bleeding: int = 0   # cantidad de heridas sangrando; drena vida con el tiempo
 var cold: int = 0       # hipotermia (0-100), la sube el ambiente helado
@@ -207,7 +220,7 @@ func save_game() -> void:
 		"scene": get_tree().current_scene.scene_file_path,
 		"hp": player_hp, "hunger": hunger, "sanity": sanity,
 		"bleeding": bleeding, "cold": cold, "infection": infection,
-		"money": money, "inventory": inv,
+		"money": money, "inventory": inv, "flags": flags,
 	}
 	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	f.store_string(JSON.stringify(data))
@@ -239,6 +252,8 @@ func load_game() -> bool:
 		if items_by_id.has(id):
 			inventory[items_by_id[id]] = int(inv[id])
 	inventory_changed.emit()
+	var fl = data.get("flags", {})
+	flags = fl if typeof(fl) == TYPE_DICTIONARY else {}
 	next_spawn = ""
 	_change_scene(str(data.get("scene", "res://scenes/maps/test_room.tscn")))
 	return true
@@ -246,6 +261,8 @@ func load_game() -> bool:
 ## Reinicia todo para una partida nueva.
 func new_game() -> void:
 	_madness_triggered = false
+	flags.clear()
+	pending_kill_id = ""
 	bleeding = 0
 	cold = 0
 	infection = 0
@@ -263,6 +280,10 @@ func start_combat(enemy_path: String, from_scene: String) -> void:
 	_change_scene("res://scenes/combat/combat.tscn")
 
 func end_combat() -> void:
+	# Si veníamos de un enemigo del mundo, queda muerto para siempre.
+	if pending_kill_id != "":
+		set_flag("dead_" + pending_kill_id)
+		pending_kill_id = ""
 	_change_scene(return_scene_path)
 
 func game_over() -> void:
