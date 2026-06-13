@@ -116,6 +116,19 @@ position = Vector2(320, 120)
 position = Vector2(480, 250)
 message = "La radio de campaña, milagrosamente intacta. Transmitís tu posición... y rezás.\n\n[ Fin de la demo del Sector Infantería ]"
 
+[node name="Escotilla" parent="." instance=ExtResource("7")]
+position = Vector2(590, 300)
+target_scene = "res://scenes/maps/naval_barco.tscn"
+target_spawn = "Entrada"
+
+[node name="CartelEscotilla" type="Label" parent="."]
+offset_left = 520.0
+offset_top = 250.0
+offset_right = 632.0
+offset_bottom = 270.0
+text = "¿Una escotilla...?"
+horizontal_alignment = 1
+
 [node name="Player" parent="." instance=ExtResource("1")]
 position = Vector2(110, 190)
 

@@ -64,8 +64,8 @@ Este documento es la lista viva: vamos tildando `[x]` lo que se completa.
       enfrentada vos vs enemigo, `Dice.versus`, mostrada en la ventana de diálogos),
       esquivar poderes de jefe, y firmar el pulso al atacar herido. El combate base
       sigue determinista.
-- [ ] **Más usos del dado**: saves (infección/frío/cordura), forzar/sigilo, primeros
-      auxilios bajo presión.
+- [x] **Saves con dado**: frío/hipotermia (charco helado) e infección por heridas
+      sin tratar. Falta: saves de cordura, forzar/sigilo, primeros auxilios.
 - [ ] **IA enemiga**: el enemigo elige qué parte tuya atacar; comportamientos.
 - [x] **Caja de diálogos base** (autoload `Dialogue`, mensajes con E). Falta:
       diálogos con NPCs, ramas/elecciones, retratos.
@@ -81,8 +81,10 @@ Este documento es la lista viva: vamos tildando `[x]` lo que se completa.
 - [ ] **Guion y narrativa**: la historia de Malvinas, NPCs, **múltiples finales**.
 - [~] **Diseño de niveles**: **Infantería** arrancado — primer mini-nivel de 3 salas
       (trinchera → campo → pozo de mando) con cobertura, niebla, alambre, espectro,
-      sargento (guardado/tienda) y objetivo (radio). Falta: ampliarlo y pulirlo;
-      después Naval (barco que se hunde) y Aviación.
+      sargento (guardado/tienda) y objetivo (radio). Falta: ampliarlo y pulirlo.
+- [~] **Naval (teaser)**: sala del barco que se hunde con **agua que sube** (te
+      congela y te ahogás, hay que llegar a la escotilla). Accesible desde el pozo.
+      Falta: desarrollarlo como teatro completo. Aviación queda para después.
 - [ ] **Arte definitivo** (PixelLab + Leonardo): conscripto pulido, enemigos
       (espectro y más), retratos pintados, tilesets, props, ambientes.
 - [ ] **Audio**: ambiente (viento, frío), SFX, música opresiva.
@@ -91,7 +93,7 @@ Este documento es la lista viva: vamos tildando `[x]` lo que se completa.
 
 ## ✨ FASE 4 — Pulido y UX
 
-- [ ] **Menús**: principal, pausa, opciones.
+- [x] **Menú de título** (Nueva partida / Continuar / Salir). Falta: pausa, opciones.
 - [ ] **Configuración**: volumen, controles remapeables, accesibilidad.
 - [ ] **Soporte de joystick/control**.
 - [ ] **Localización** español / inglés (clave para vender afuera).
