@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://ctitle0hambre1"]
+[gd_scene format=3 uid="uid://chugfq8p6uip7"]
 
 [ext_resource type="Script" path="res://scenes/ui/title.gd" id="1"]
 

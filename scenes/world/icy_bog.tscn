@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://cicybog0hambre1"]
+[gd_scene format=3 uid="uid://bcegs8jqr08gg"]
 
 [ext_resource type="Script" path="res://scenes/world/hazard.gd" id="1"]
 [ext_resource type="Texture2D" path="res://assets/props/icy_puddle.png" id="2"]

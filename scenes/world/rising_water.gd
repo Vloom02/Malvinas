@@ -8,7 +8,7 @@ extends Node2D
 ## Nivel inicial del agua (Y en el mundo; 360 = piso, abajo).
 @export var start_level: float = 360.0
 ## Hasta dónde sube como máximo (Y más chico = más arriba).
-@export var top_level: float = 70.0
+@export var max_level: float = 70.0
 
 @onready var water: ColorRect = $Water
 
@@ -20,7 +20,7 @@ func _ready() -> void:
 	water.offset_top = _level
 
 func _process(delta: float) -> void:
-	_level = maxf(top_level, _level - rise_speed * delta)
+	_level = maxf(max_level, _level - rise_speed * delta)
 	water.offset_top = _level
 
 	var p := get_tree().get_first_node_in_group("player")
