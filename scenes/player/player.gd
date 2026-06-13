@@ -18,7 +18,12 @@ var _facing: String = "south"
 func _physics_process(delta: float) -> void:
 	var direction := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 
-	velocity = direction * speed
+	# Piernas rotas = caminás más lento (consecuencia permanente).
+	var spd := speed
+	match GameState.broken_legs():
+		1: spd *= 0.65
+		2: spd *= 0.35
+	velocity = direction * spd
 	move_and_slide()
 
 	_update_animation(direction)

@@ -8,6 +8,7 @@ signal hunger_changed(value: int)
 signal sanity_changed(value: int)
 signal player_hp_changed(value: int)
 signal body_changed          # sangrado/frío/infección cambió
+signal body_part_broken(part: String)  # se te rompió un miembro
 signal inventory_changed     # se agregó/usó un item
 signal money_changed         # cambió la plata (cigarrillos)
 signal player_died
@@ -48,6 +49,13 @@ func has_flag(id: String) -> bool:
 var bleeding: int = 0   # cantidad de heridas sangrando; drena vida con el tiempo
 var cold: int = 0       # hipotermia (0-100), la sube el ambiente helado
 var infection: int = 0  # infección (0-100) de heridas sin tratar
+
+## Miembros del jugador: "ok" o "roto". Roto = consecuencia PERMANENTE (hasta
+## que lo entablilles). Brazo roto = peor pulso; pierna rota = caminás lento.
+var body_parts_state: Dictionary = {
+	"brazo_izq": "ok", "brazo_der": "ok",
+	"pierna_izq": "ok", "pierna_der": "ok",
+}
 
 const BLEED_INTERVAL := 1.5   # cada cuántos segundos drena el sangrado
 var _bleed_timer: float = 0.0
@@ -155,6 +163,32 @@ func bandage() -> void:
 	body_changed.emit()
 	print("[Cuerpo] Te vendás. El sangrado se detiene.")
 
+# --- Miembros / consecuencias permanentes ---
+
+## Rompe un miembro (permanente). Devuelve true si recién se rompió.
+func break_part(part: String) -> bool:
+	if body_parts_state.get(part, "roto") == "ok":
+		body_parts_state[part] = "roto"
+		body_part_broken.emit(part)
+		body_changed.emit()
+		return true
+	return false
+
+## Entablilla (repara) un miembro roto. Devuelve true si reparó alguno.
+func splint() -> bool:
+	for part in body_parts_state.keys():
+		if body_parts_state[part] == "roto":
+			body_parts_state[part] = "ok"
+			body_changed.emit()
+			return true
+	return false
+
+func broken_arms() -> int:
+	return int(body_parts_state["brazo_izq"] == "roto") + int(body_parts_state["brazo_der"] == "roto")
+
+func broken_legs() -> int:
+	return int(body_parts_state["pierna_izq"] == "roto") + int(body_parts_state["pierna_der"] == "roto")
+
 # --- Inventario ---
 
 ## Agrega `qty` unidades de un item al inventario.
@@ -221,6 +255,7 @@ func save_game() -> void:
 		"hp": player_hp, "hunger": hunger, "sanity": sanity,
 		"bleeding": bleeding, "cold": cold, "infection": infection,
 		"money": money, "inventory": inv, "flags": flags,
+		"parts": body_parts_state,
 	}
 	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	f.store_string(JSON.stringify(data))
@@ -254,6 +289,11 @@ func load_game() -> bool:
 	inventory_changed.emit()
 	var fl = data.get("flags", {})
 	flags = fl if typeof(fl) == TYPE_DICTIONARY else {}
+	var pt = data.get("parts", {})
+	if typeof(pt) == TYPE_DICTIONARY:
+		for part in body_parts_state.keys():
+			if pt.has(part):
+				body_parts_state[part] = pt[part]
 	next_spawn = ""
 	_change_scene(str(data.get("scene", "res://scenes/maps/test_room.tscn")))
 	return true
@@ -266,6 +306,10 @@ func new_game() -> void:
 	bleeding = 0
 	cold = 0
 	infection = 0
+	body_parts_state = {
+		"brazo_izq": "ok", "brazo_der": "ok",
+		"pierna_izq": "ok", "pierna_der": "ok",
+	}
 	hunger = HUNGER_MAX
 	sanity = SANITY_MAX
 	player_hp = PLAYER_HP_MAX

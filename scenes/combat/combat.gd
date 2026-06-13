@@ -90,9 +90,19 @@ func _clear_actions() -> void:
 	for c in actions.get_children():
 		c.queue_free()
 
-## Estás "herido": te tiembla el pulso (sangrando o con poca vida).
+## Lugares donde el enemigo te puede pegar (los miembros son quebrables).
+const TARGETS := [
+	{"key": "cabeza", "name": "la cabeza"},
+	{"key": "torso", "name": "el torso"},
+	{"key": "brazo_izq", "name": "el brazo izquierdo"},
+	{"key": "brazo_der", "name": "el brazo derecho"},
+	{"key": "pierna_izq", "name": "la pierna izquierda"},
+	{"key": "pierna_der", "name": "la pierna derecha"},
+]
+
+## Estás "herido": te tiembla el pulso (sangrando, con poca vida o brazo roto).
 func _is_wounded() -> bool:
-	return GameState.bleeding > 0 or GameState.player_hp < WOUNDED_HP
+	return GameState.bleeding > 0 or GameState.player_hp < WOUNDED_HP or GameState.broken_arms() > 0
 
 func _on_attack_part(part: String) -> void:
 	if combat_over or not is_player_turn or _pending_dodge:
@@ -168,9 +178,16 @@ func _enemy_turn() -> void:
 	# Ataque normal: determinista, sin dado.
 	_power_cooldown = false
 	var dmg := maxi(1, enemy.attack)
-	var part := _random_player_part()
+	var t := TARGETS[randi() % TARGETS.size()]
 	GameState.damage_player(dmg)
-	_log("%s te golpea en %s: -%d de vida." % [enemy.display_name, part, dmg])
+	_log("%s te golpea en %s: -%d de vida." % [enemy.display_name, t["name"], dmg])
+	# Si pega un miembro, puede quebrártelo (permanente).
+	if GameState.body_parts_state.has(t["key"]) and Dice.chance(0.22):
+		if GameState.break_part(t["key"]):
+			_log("¡CRAC! Te quiebra %s. Queda roto." % t["name"])
+	elif Dice.chance(0.3):
+		GameState.apply_bleeding(1)
+		_log("¡Te abre una herida! Empezás a SANGRAR.")
 	_refresh_player_info()
 	if GameState.player_hp <= 0:
 		_lose()
@@ -278,6 +295,12 @@ func _refresh_player_info() -> void:
 	var s := "Tu vida: %d/%d" % [GameState.player_hp, GameState.PLAYER_HP_MAX]
 	if GameState.bleeding > 0:
 		s += "    (SANGRANDO x%d)" % GameState.bleeding
+	var roto: Array = []
+	for part in GameState.body_parts_state.keys():
+		if GameState.body_parts_state[part] == "roto":
+			roto.append(part)
+	if not roto.is_empty():
+		s += "\nRoto: " + ", ".join(roto)
 	player_info.text = s
 
 func _win() -> void:
