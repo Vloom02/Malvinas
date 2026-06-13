@@ -39,6 +39,12 @@ var flags: Dictionary = {}
 ## Id del enemigo que estás peleando (para marcarlo muerto si ganás).
 var pending_kill_id: String = ""
 
+## "Peligro": sube con el tiempo (descansar, pelear). Los enemigos pegan más.
+var danger: int = 0
+
+func advance_danger(n: int = 1) -> void:
+	danger += n
+
 func set_flag(id: String) -> void:
 	flags[id] = true
 
@@ -295,7 +301,7 @@ func save_game() -> void:
 		"hp": player_hp, "hunger": hunger, "sanity": sanity,
 		"bleeding": bleeding, "cold": cold, "infection": infection,
 		"money": money, "inventory": inv, "flags": flags,
-		"parts": body_parts_state,
+		"parts": body_parts_state, "danger": danger,
 	}
 	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	f.store_string(JSON.stringify(data))
@@ -321,6 +327,7 @@ func load_game() -> bool:
 	player_hp = int(data.get("hp", PLAYER_HP_MAX))
 	money = int(data.get("money", 0))
 	money_changed.emit()
+	danger = int(data.get("danger", 0))
 	inventory.clear()
 	var inv = data.get("inventory", {})
 	for id in inv.keys():
@@ -343,6 +350,7 @@ func new_game() -> void:
 	_madness_triggered = false
 	flags.clear()
 	pending_kill_id = ""
+	danger = 0
 	bleeding = 0
 	cold = 0
 	infection = 0
@@ -368,6 +376,7 @@ func end_combat() -> void:
 	if pending_kill_id != "":
 		set_flag("dead_" + pending_kill_id)
 		pending_kill_id = ""
+	advance_danger(1)   # cada pelea sube la presión
 	_change_scene(return_scene_path)
 
 ## Huiste: volvés al mundo pero el enemigo sigue vivo.

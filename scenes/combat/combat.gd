@@ -188,9 +188,9 @@ func _enemy_turn() -> void:
 		is_player_turn = true
 		return
 
-	# Ataque normal: determinista, sin dado.
+	# Ataque normal: determinista, sin dado. El "peligro" lo hace pegar más fuerte.
 	_power_cooldown = false
-	var dmg := maxi(1, enemy.attack)
+	var dmg := maxi(1, enemy.attack + GameState.danger)
 	var t := TARGETS[randi() % TARGETS.size()]
 	GameState.damage_player(dmg)
 	_log("%s te golpea en %s: -%d de vida." % [enemy.display_name, t["name"], dmg])

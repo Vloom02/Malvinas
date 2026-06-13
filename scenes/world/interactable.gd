@@ -21,6 +21,8 @@ class_name Interactable
 @export var give_qty: int = 1
 ## Id único para recordar que ya lo agarraste (vacío = no se recuerda).
 @export var pickup_id: String = ""
+## Si lo seteás, al interactuar marca este flag (sirve de palanca/llave para puertas).
+@export var set_flag_on_use: String = ""
 
 signal interacted
 
@@ -47,6 +49,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _player_inside and event.is_action_pressed("interact"):
 		get_viewport().set_input_as_handled()
 		var text := message
+		if set_flag_on_use != "":
+			GameState.set_flag(set_flag_on_use)
 		if sanity_cost > 0:
 			GameState.drain_sanity(sanity_cost)
 			text += "\n\n(Algo se quiebra en tu mente. -%d cordura.)" % sanity_cost

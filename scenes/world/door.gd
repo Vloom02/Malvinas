@@ -7,6 +7,12 @@ class_name Door
 @export_file("*.tscn") var target_scene: String = ""
 ## Nombre del Marker2D donde aparecés en la sala destino.
 @export var target_spawn: String = ""
+## Si está trabada, necesitás tener seteado `unlock_flag` para pasar.
+@export var locked: bool = false
+## Flag que la destraba (lo setea una palanca o una llave).
+@export var unlock_flag: String = ""
+## Mensaje si está trabada.
+@export var locked_message: String = "Está trabada. Hay que abrirla de algún lado."
 
 var _used: bool = false
 
@@ -16,6 +22,10 @@ func _ready() -> void:
 func _on_body_entered(body: Node) -> void:
 	if _used:
 		return
-	if body.is_in_group("player") and target_scene != "":
-		_used = true
-		Transition.change(target_scene, target_spawn)
+	if not body.is_in_group("player") or target_scene == "":
+		return
+	if locked and unlock_flag != "" and not GameState.has_flag(unlock_flag):
+		Dialogue.say(locked_message)
+		return
+	_used = true
+	Transition.change(target_scene, target_spawn)

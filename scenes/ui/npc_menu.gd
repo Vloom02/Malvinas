@@ -76,8 +76,9 @@ func _do_rest() -> void:
 	GameState.player_hp += 30
 	GameState.cold = 0
 	GameState.hunger = maxi(0, GameState.hunger - 12)
+	GameState.advance_danger(1)   # mientras dormís, el peligro avanza
 	GameState.body_changed.emit()
-	_info("Te tirás a dormir un rato. Recomponés el cuerpo... pero el hambre aprieta.")
+	_info("Te tirás a dormir un rato. Recomponés el cuerpo... pero el hambre aprieta\ny algo, afuera, se acerca.")
 
 func _do_talk() -> void:
 	_info("«Aguantá, pibe. El frío y el miedo matan más que el inglés.»")
