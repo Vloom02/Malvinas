@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://cjournal0hambre1"]
+[gd_scene format=3 uid="uid://mw67rce3act7"]
 
 [ext_resource type="Script" path="res://scenes/ui/journal.gd" id="1"]
 

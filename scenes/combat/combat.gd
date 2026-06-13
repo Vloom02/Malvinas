@@ -31,6 +31,7 @@ var combat_over: bool = false
 var _pending_dodge: bool = false   # esperando que esquives un poder
 var _power_cooldown: bool = false  # el jefe no encadena poderes
 var _enemy_staggered: bool = false # le destruiste una parte: pierde el turno
+var _resolved: bool = false        # ya se resolvió (ganaste/perdiste): no repetir
 
 func _ready() -> void:
 	var path := GameState.pending_enemy_path
@@ -320,10 +321,6 @@ func _update_part_label(part: String) -> void:
 func _enemy_dead() -> bool:
 	return parts_hp.get("cabeza", 1) <= 0 or parts_hp.get("torso", 1) <= 0
 
-func _random_player_part() -> String:
-	var parts := ["la cabeza", "el torso", "el brazo", "la pierna"]
-	return parts[randi() % parts.size()]
-
 func _refresh_player_info() -> void:
 	var s := "Tu vida: %d/%d" % [GameState.player_hp, GameState.PLAYER_HP_MAX]
 	if GameState.bleeding > 0:
@@ -337,6 +334,9 @@ func _refresh_player_info() -> void:
 	player_info.text = s
 
 func _win() -> void:
+	if _resolved:
+		return
+	_resolved = true
 	combat_over = true
 	_log("Derrotaste a %s." % enemy.display_name)
 	if enemy.reward > 0:
@@ -350,6 +350,9 @@ func _win() -> void:
 	GameState.end_combat()
 
 func _lose() -> void:
+	if _resolved:
+		return
+	_resolved = true
 	combat_over = true
 	_log("Has muerto.")
 	await get_tree().create_timer(1.5).timeout

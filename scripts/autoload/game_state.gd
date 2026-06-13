@@ -38,6 +38,8 @@ var next_spawn: String = ""
 var flags: Dictionary = {}
 ## Id del enemigo que estás peleando (para marcarlo muerto si ganás).
 var pending_kill_id: String = ""
+## Evita disparar game over más de una vez.
+var _dead: bool = false
 
 ## "Peligro": sube con el tiempo (descansar, pelear). Los enemigos pegan más.
 var danger: int = 0
@@ -123,7 +125,19 @@ func _ready() -> void:
 		"venda": ITEM_VENDA, "racion": ITEM_RACION, "morfina": ITEM_MORFINA,
 		"antibioticos": ITEM_ANTIBIOTICOS, "fosforos": ITEM_FOSFOROS, "tablilla": ITEM_TABLILLA,
 	}
+	player_died.connect(_on_player_died_global)
 	_give_starting_items()
+
+## Muerte (hambre/sangrado/etc.). En el MUNDO dispara el game over; en COMBATE
+## lo maneja la propia pantalla de combate (para mostrar "Has muerto").
+func _on_player_died_global() -> void:
+	if _dead:
+		return
+	var cur := get_tree().current_scene
+	if cur != null and cur.scene_file_path.contains("combat"):
+		return
+	_dead = true
+	game_over()
 
 # --- Tick del cuerpo: sangrado (rápido) + frío/infección (lento) ---
 func _process(delta: float) -> void:
@@ -326,6 +340,7 @@ func load_game() -> bool:
 	if typeof(data) != TYPE_DICTIONARY:
 		return false
 	_madness_triggered = false
+	_dead = false
 	bleeding = int(data.get("bleeding", 0))
 	cold = int(data.get("cold", 0))
 	infection = int(data.get("infection", 0))
@@ -357,6 +372,7 @@ func load_game() -> bool:
 ## Reinicia todo para una partida nueva.
 func new_game() -> void:
 	_madness_triggered = false
+	_dead = false
 	flags.clear()
 	pending_kill_id = ""
 	danger = 0

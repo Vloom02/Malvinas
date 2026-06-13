@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://cending0hambre1"]
+[gd_scene format=3 uid="uid://c815a3u2fo4go"]
 
 [ext_resource type="Script" path="res://scenes/world/ending.gd" id="1"]
 
