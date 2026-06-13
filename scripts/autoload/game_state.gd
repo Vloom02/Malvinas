@@ -395,8 +395,7 @@ func flee_combat() -> void:
 	_change_scene(return_scene_path)
 
 func game_over() -> void:
-	new_game()
-	_change_scene("res://scenes/maps/nivel1_trinchera.tscn")
+	_change_scene("res://scenes/ui/game_over.tscn")
 
 func _trigger_madness() -> void:
 	pending_enemy_path = "res://data/enemies/madness.tres"

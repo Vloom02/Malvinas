@@ -25,6 +25,7 @@ Dialogue="*res://scenes/ui/dialogue.tscn"
 Transition="*res://scenes/ui/transition.tscn"
 NpcMenu="*res://scenes/ui/npc_menu.tscn"
 Journal="*res://scenes/ui/journal.tscn"
+PauseMenu="*res://scenes/ui/pause_menu.tscn"
 
 [display]
 
