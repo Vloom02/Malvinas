@@ -51,7 +51,11 @@ func _update_animation(direction: Vector2) -> void:
 func _reflect_body() -> void:
 	var redness := clampf(GameState.bleeding * 0.12, 0.0, 0.5)
 	var blueness := clampf(GameState.cold * 0.004, 0.0, 0.35)
-	sprite.modulate = Color(1.0 - blueness, 1.0 - redness - blueness * 0.3, 1.0 - redness)
+	var sickly := clampf(GameState.infection * 0.004, 0.0, 0.3)  # infección = verdoso
+	sprite.modulate = Color(
+		1.0 - blueness - sickly * 0.3,
+		1.0 - redness - blueness * 0.3,
+		1.0 - redness - sickly)
 
 func _unhandled_input(event: InputEvent) -> void:
 	# Opción de tirar el dado (R): muestra el resultado en la ventana de diálogos.

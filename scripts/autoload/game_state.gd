@@ -38,6 +38,7 @@ var infection: int = 0  # infección (0-100) de heridas sin tratar
 
 const BLEED_INTERVAL := 1.5   # cada cuántos segundos drena el sangrado
 var _bleed_timer: float = 0.0
+var _body_timer: float = 0.0  # tick lento para frío/infección
 
 # --- Inventario ---
 const ITEM_VENDA := preload("res://data/items/venda.tres")
@@ -83,13 +84,38 @@ func _ready() -> void:
 	items_by_id = {"venda": ITEM_VENDA, "racion": ITEM_RACION}
 	_give_starting_items()
 
-# --- Tick del cuerpo: el sangrado drena vida con el tiempo ---
+# --- Tick del cuerpo: sangrado (rápido) + frío/infección (lento) ---
 func _process(delta: float) -> void:
 	if bleeding > 0 and player_hp > 0:
 		_bleed_timer += delta
 		while _bleed_timer >= BLEED_INTERVAL:
 			_bleed_timer -= BLEED_INTERVAL
 			player_hp -= bleeding   # cada herida sangrante = 1 de daño por tick
+
+	_body_timer += delta
+	while _body_timer >= 1.0:
+		_body_timer -= 1.0
+		_tick_status()
+
+## Cada segundo: el frío se va yendo (te calentás); la infección sube si tenés
+## heridas abiertas y baja si no. Frío o infección al máximo = drenan vida.
+func _tick_status() -> void:
+	var changed := false
+	if cold > 0:
+		cold -= 1
+		changed = true
+	if bleeding > 0 and infection < 100:
+		infection += 1
+		changed = true
+	elif bleeding == 0 and infection > 0:
+		infection -= 1
+		changed = true
+	if cold >= 90 and player_hp > 0:
+		player_hp -= 1
+	if infection >= 90 and player_hp > 0:
+		player_hp -= 1
+	if changed:
+		body_changed.emit()
 
 # --- Acciones ---
 

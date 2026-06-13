@@ -16,6 +16,7 @@
 [ext_resource type="Texture2D" path="res://assets/props/crater.png" id="14"]
 [ext_resource type="Texture2D" path="res://assets/props/tussock.png" id="15"]
 [ext_resource type="Texture2D" path="res://assets/props/gorse.png" id="16"]
+[ext_resource type="PackedScene" path="res://scenes/world/icy_bog.tscn" id="17"]
 
 [sub_resource type="RectangleShape2D" id="WallH"]
 size = Vector2(640, 16)
@@ -111,6 +112,9 @@ position = Vector2(540, 190)
 
 [node name="Alambre" parent="." instance=ExtResource("9")]
 position = Vector2(250, 150)
+
+[node name="CharcoHelado" parent="." instance=ExtResource("17")]
+position = Vector2(440, 235)
 
 [node name="Espectro" parent="." instance=ExtResource("10")]
 position = Vector2(360, 255)
