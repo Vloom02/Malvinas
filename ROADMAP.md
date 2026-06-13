@@ -56,7 +56,10 @@ Este documento es la lista viva: vamos tildando `[x]` lo que se completa.
       helado → hipotermia; alambre de púas → herida). Reutilizable como `Hazard`.
 - [ ] **Efectos de estado por turno/tiempo** (sangrado que drena vida, infección
       que empeora, frío que sube).
-- [ ] **Inventario + items** (vendas, torniquete, ración, morfina) con uso limitado.
+- [x] **Inventario + items** con uso limitado (límite de 12): vendas, ración, morfina,
+      antibióticos, fósforos, tablilla. Hambre que mata (inanición). Descansar.
+- [x] **Cuerpo del jugador con partes**: brazos/piernas que se rompen (permanente):
+      pierna rota = más lento; brazo roto = peor pulso. Tablilla los repara.
 
 ## ⚙️ FASE 2 — Profundidad de sistemas
 
@@ -66,7 +69,11 @@ Este documento es la lista viva: vamos tildando `[x]` lo que se completa.
       sigue determinista.
 - [x] **Saves con dado**: frío/hipotermia (charco helado) e infección por heridas
       sin tratar. Falta: saves de cordura, forzar/sigilo, primeros auxilios.
-- [ ] **IA enemiga**: el enemigo elige qué parte tuya atacar; comportamientos.
+- [x] **IA enemiga**: el enemigo apunta a tus miembros y puede quebrártelos; el
+      "peligro" lo hace pegar más fuerte. **Huir** (dado) y **aturdir** (destruir parte).
+- [x] **Estado persistente**: enemigos muertos no reaparecen, items no se repiten,
+      flags, palancas/puertas con traba, contador de peligro, emboscadas opcionales.
+- [x] **Diálogos con opciones**, **diario** de lore (J) y **finales por decisión**.
 - [x] **Caja de diálogos base** (autoload `Dialogue`, mensajes con E). Falta:
       diálogos con NPCs, ramas/elecciones, retratos.
 - [x] **Guardar/cargar** reportándote a un NPC (el Sargento): guarda estado e
