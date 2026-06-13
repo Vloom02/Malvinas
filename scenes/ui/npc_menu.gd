@@ -28,6 +28,7 @@ func _show_main() -> void:
 		["Reportarte (guardar)", _do_save],
 		["Volver al último reporte (cargar)", _do_load],
 		["Comprar provisiones", _show_shop],
+		["Descansar", _do_rest],
 		["Hablar", _do_talk],
 		["Irte", Callable(self, "close")],
 	])
@@ -70,6 +71,13 @@ func _buy(item: ItemData) -> void:
 		_info("Comprás: %s." % item.display_name)
 	else:
 		_info("No te alcanzan los cigarrillos.")
+
+func _do_rest() -> void:
+	GameState.player_hp += 30
+	GameState.cold = 0
+	GameState.hunger = maxi(0, GameState.hunger - 12)
+	GameState.body_changed.emit()
+	_info("Te tirás a dormir un rato. Recomponés el cuerpo... pero el hambre aprieta.")
 
 func _do_talk() -> void:
 	_info("«Aguantá, pibe. El frío y el miedo matan más que el inglés.»")

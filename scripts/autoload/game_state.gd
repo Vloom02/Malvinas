@@ -64,6 +64,10 @@ var _body_timer: float = 0.0  # tick lento para frío/infección
 # --- Inventario ---
 const ITEM_VENDA := preload("res://data/items/venda.tres")
 const ITEM_RACION := preload("res://data/items/racion.tres")
+const ITEM_MORFINA := preload("res://data/items/morfina.tres")
+const ITEM_ANTIBIOTICOS := preload("res://data/items/antibioticos.tres")
+const ITEM_FOSFOROS := preload("res://data/items/fosforos.tres")
+const ITEM_TABLILLA := preload("res://data/items/tablilla.tres")
 var inventory: Dictionary = {}   # ItemData -> cantidad
 
 # --- Dinero / tienda / guardado ---
@@ -71,7 +75,7 @@ const SAVE_PATH := "user://save.json"
 ## Moneda de trueque: cigarrillos (lo que se usaba entre soldados).
 var money: int = 0
 ## Items que vende el sargento.
-var shop_items: Array[ItemData] = [ITEM_VENDA, ITEM_RACION]
+var shop_items: Array[ItemData] = [ITEM_VENDA, ITEM_RACION, ITEM_MORFINA, ITEM_ANTIBIOTICOS, ITEM_FOSFOROS, ITEM_TABLILLA]
 ## id -> ItemData (para reconstruir el inventario al cargar).
 var items_by_id: Dictionary = {}
 
@@ -102,7 +106,10 @@ var player_hp: int = PLAYER_HP_MAX:
 			player_died.emit()
 
 func _ready() -> void:
-	items_by_id = {"venda": ITEM_VENDA, "racion": ITEM_RACION}
+	items_by_id = {
+		"venda": ITEM_VENDA, "racion": ITEM_RACION, "morfina": ITEM_MORFINA,
+		"antibioticos": ITEM_ANTIBIOTICOS, "fosforos": ITEM_FOSFOROS, "tablilla": ITEM_TABLILLA,
+	}
 	_give_starting_items()
 
 # --- Tick del cuerpo: sangrado (rápido) + frío/infección (lento) ---
@@ -135,6 +142,8 @@ func _tick_status() -> void:
 		player_hp -= 1
 	if infection >= 90 and player_hp > 0:
 		player_hp -= 1
+	if hunger <= 0 and player_hp > 0:
+		player_hp -= 1   # inanición: el hambre en 0 te mata de a poco
 	if changed:
 		body_changed.emit()
 
@@ -191,13 +200,25 @@ func broken_legs() -> int:
 
 # --- Inventario ---
 
-## Agrega `qty` unidades de un item al inventario.
-func add_item(item: ItemData, qty: int = 1) -> void:
+## Cuántos items podés cargar en total (escasez estilo F&H).
+const INVENTORY_MAX := 12
+
+func inventory_total() -> int:
+	var t := 0
+	for c in inventory.values():
+		t += c
+	return t
+
+## Agrega items. Devuelve false si no entran (inventario lleno).
+func add_item(item: ItemData, qty: int = 1) -> bool:
 	if item == null:
-		return
+		return false
+	if inventory_total() + qty > INVENTORY_MAX:
+		return false
 	inventory[item] = int(inventory.get(item, 0)) + qty
 	inventory_changed.emit()
 	print("[Inventario] +%d %s" % [qty, item.display_name])
+	return true
 
 ## Usa un item: aplica su efecto y descuenta uno si se consumió.
 ## Devuelve true si se usó, false si no tenía sentido (no se gasta).
@@ -223,6 +244,23 @@ func _apply_item_effect(item: ItemData) -> bool:
 			hunger += item.amount
 			print("[Inventario] Comés. Hambre: %d/%d" % [hunger, HUNGER_MAX])
 			return true
+		"morphine":
+			player_hp += item.amount   # calma el dolor: recuperás vida
+			return true
+		"antibiotic":
+			if infection <= 0:
+				return false
+			infection = 0
+			body_changed.emit()
+			return true
+		"warm":
+			if cold <= 0:
+				return false
+			cold = maxi(0, cold - item.amount)
+			body_changed.emit()
+			return true
+		"splint":
+			return splint()   # entablilla un miembro roto (false si no hay)
 		_:
 			return false
 
@@ -235,10 +273,12 @@ func _give_starting_items() -> void:
 
 # --- Tienda ---
 
-## Compra un item si te alcanza la plata. Devuelve true si se compró.
+## Compra un item si te alcanza la plata y tenés lugar. Devuelve true si se compró.
 func buy_item(item: ItemData) -> bool:
 	if item == null or item.price <= 0 or money < item.price:
 		return false
+	if inventory_total() + 1 > INVENTORY_MAX:
+		return false  # inventario lleno
 	money -= item.price
 	money_changed.emit()
 	add_item(item, 1)

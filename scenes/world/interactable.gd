@@ -51,10 +51,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			GameState.drain_sanity(sanity_cost)
 			text += "\n\n(Algo se quiebra en tu mente. -%d cordura.)" % sanity_cost
 		if gives_item != null and not _item_taken:
-			GameState.add_item(gives_item, give_qty)
-			_item_taken = true
-			if pickup_id != "":
-				GameState.set_flag("taken_" + pickup_id)
-			text += "\n\nObtenés: %s x%d." % [gives_item.display_name, give_qty]
+			if GameState.add_item(gives_item, give_qty):
+				_item_taken = true
+				if pickup_id != "":
+					GameState.set_flag("taken_" + pickup_id)
+				text += "\n\nObtenés: %s x%d." % [gives_item.display_name, give_qty]
+			else:
+				text += "\n\nNo te entra: el inventario está lleno."
 		Dialogue.say(text)
 		interacted.emit()
