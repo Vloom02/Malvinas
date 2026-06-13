@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://cfog0hambre1"]
+[gd_scene format=3 uid="uid://cfog0hambre1"]
 
 [ext_resource type="Shader" path="res://scenes/world/fog.gdshader" id="1"]
 
