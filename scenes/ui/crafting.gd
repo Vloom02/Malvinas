@@ -3,15 +3,16 @@ extends CanvasLayer
 @onready var panel: Panel = $Panel
 @onready var list: VBoxContainer = $Panel/Scroll/List
 @onready var info: Label = $Panel/Info
+@onready var cerrar_btn: Button = $Panel/CerrarBtn
 
 func _ready() -> void:
 	visible = false
+	cerrar_btn.pressed.connect(_close)
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("inventory"):
-		if visible:
-			_close()
-	elif visible and event.is_action_pressed("ui_cancel"):
+	if not visible:
+		return
+	if event.is_action_pressed("inventory") or event.is_action_pressed("ui_cancel"):
 		_close()
 		get_viewport().set_input_as_handled()
 

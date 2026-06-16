@@ -3,7 +3,14 @@
 [ext_resource type="Script" path="res://scenes/ui/crafting.gd" id="1"]
 
 [node name="Crafting" type="CanvasLayer"]
+process_mode = 3
+layer = 4
 script = ExtResource("1")
+
+[node name="Dim" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.55)
 
 [node name="Panel" type="Panel" parent="."]
 offset_left = 120.0
@@ -16,7 +23,7 @@ offset_left = 10.0
 offset_top = 10.0
 offset_right = 390.0
 offset_bottom = 30.0
-text = "Crafteo"
+text = "Crafteo   (Esc para cerrar)"
 theme_override_font_sizes/font_size = 14
 
 [node name="Scroll" type="ScrollContainer" parent="Panel"]
@@ -30,5 +37,12 @@ offset_bottom = 260.0
 [node name="Info" type="Label" parent="Panel"]
 offset_left = 10.0
 offset_top = 264.0
+offset_right = 250.0
+offset_bottom = 290.0
+
+[node name="CerrarBtn" type="Button" parent="Panel"]
+offset_left = 300.0
+offset_top = 264.0
 offset_right = 390.0
 offset_bottom = 290.0
+text = "Cerrar"
