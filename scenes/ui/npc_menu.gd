@@ -56,8 +56,13 @@ func _info(msg: String) -> void:
 	info.text = "%s\n\nCigarrillos: %d" % [msg, GameState.money]
 
 func _do_save() -> void:
+	if GameState.money < 3:
+		_info("No te alcanzan los cigarrillos para el reporte. Necesitás 3.")
+		return
+	GameState.money -= 3
+	GameState.money_changed.emit()
 	GameState.save_game()
-	_info("Te reportás. Partida guardada.")
+	_info("Gastás 3 cigarrillos en el reporte. Partida guardada.")
 
 func _do_load() -> void:
 	if GameState.has_save():
@@ -81,7 +86,12 @@ func _do_rest() -> void:
 	_info("Te tirás a dormir un rato. Recomponés el cuerpo... pero el hambre aprieta\ny algo, afuera, se acerca.")
 
 func _do_talk() -> void:
-	_info("«Aguantá, pibe. El frío y el miedo matan más que el inglés.»")
+	close()
+	var data := load("res://data/dialogue/%s.tres" % _npc_name.to_lower()) as DataDialogue
+	if data != null:
+		Dialogue.play_data(data)
+	else:
+		Dialogue.say("El %s te mira. No tiene ganas de hablar." % _npc_name)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if visible and event.is_action_pressed("ui_cancel"):

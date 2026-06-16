@@ -83,6 +83,12 @@ const ITEM_MORFINA := preload("res://data/items/morfina.tres")
 const ITEM_ANTIBIOTICOS := preload("res://data/items/antibioticos.tres")
 const ITEM_FOSFOROS := preload("res://data/items/fosforos.tres")
 const ITEM_TABLILLA := preload("res://data/items/tablilla.tres")
+const ITEM_RAMA := preload("res://data/items/rama.tres")
+const ITEM_ALCOHOL := preload("res://data/items/alcohol.tres")
+const ITEM_CARNE_PODRIDA := preload("res://data/items/carne_podrida.tres")
+const ITEM_DIENTE := preload("res://data/items/diente.tres")
+const ITEM_FOGATA_PORTATIL := preload("res://data/items/fogata_portatil.tres")
+const ITEM_VENDA_ESTERILIZADA := preload("res://data/items/venda_esterilizada.tres")
 var inventory: Dictionary = {}   # ItemData -> cantidad
 
 # --- Dinero / tienda / guardado ---
@@ -90,7 +96,7 @@ const SAVE_PATH := "user://save.json"
 ## Moneda de trueque: cigarrillos (lo que se usaba entre soldados).
 var money: int = 0
 ## Items que vende el sargento.
-var shop_items: Array[ItemData] = [ITEM_VENDA, ITEM_RACION, ITEM_MORFINA, ITEM_ANTIBIOTICOS, ITEM_FOSFOROS, ITEM_TABLILLA]
+	var shop_items: Array[ItemData] = [ITEM_VENDA, ITEM_RACION, ITEM_MORFINA, ITEM_ANTIBIOTICOS, ITEM_FOSFOROS, ITEM_TABLILLA, ITEM_RAMA, ITEM_ALCOHOL]
 ## id -> ItemData (para reconstruir el inventario al cargar).
 var items_by_id: Dictionary = {}
 
@@ -124,6 +130,9 @@ func _ready() -> void:
 	items_by_id = {
 		"venda": ITEM_VENDA, "racion": ITEM_RACION, "morfina": ITEM_MORFINA,
 		"antibioticos": ITEM_ANTIBIOTICOS, "fosforos": ITEM_FOSFOROS, "tablilla": ITEM_TABLILLA,
+		"rama": ITEM_RAMA, "alcohol": ITEM_ALCOHOL, "carne_podrida": ITEM_CARNE_PODRIDA,
+		"diente": ITEM_DIENTE, "fogata_portatil": ITEM_FOGATA_PORTATIL,
+		"venda_esterilizada": ITEM_VENDA_ESTERILIZADA,
 	}
 	player_died.connect(_on_player_died_global)
 	_give_starting_items()
@@ -183,6 +192,15 @@ func spend_step() -> void:
 ## Baja la cordura (altar, sustos, oscuridad...).
 func drain_sanity(amount: int) -> void:
 	sanity -= amount
+
+## Save de cordura: tirá un d20 + modificador contra una dificultad.
+## Si fallás, perdés `sanity_loss` puntos de cordura.
+## Usalo para eventos perturbadores (ver un muerto, entrar a una sala oscura, etc.).
+func sanity_save(dc: int = 12, sanity_loss: int = 10, mod: int = 0) -> Dictionary:
+	var r := Dice.check(mod, dc)
+	if not r["success"]:
+		drain_sanity(sanity_loss)
+	return r
 
 ## Daño directo al jugador (combate).
 func damage_player(amount: int) -> void:
@@ -264,15 +282,19 @@ func _apply_item_effect(item: ItemData) -> bool:
 	match item.effect:
 		"bandage":
 			if bleeding <= 0:
-				return false  # no gastar venda si no estás sangrando
+				return false
 			bandage()
 			return true
 		"ration":
 			hunger += item.amount
 			print("[Inventario] Comés. Hambre: %d/%d" % [hunger, HUNGER_MAX])
+			if item.id == "carne_podrida" and Dice.chance(0.45):
+				infection = clampi(infection + 15, 0, 100)
+				body_changed.emit()
+				print("[Inventario] La carne podrida te hizo mal. Infección sube.")
 			return true
 		"morphine":
-			player_hp += item.amount   # calma el dolor: recuperás vida
+			player_hp += item.amount
 			return true
 		"antibiotic":
 			if infection <= 0:
@@ -287,7 +309,14 @@ func _apply_item_effect(item: ItemData) -> bool:
 			body_changed.emit()
 			return true
 		"splint":
-			return splint()   # entablilla un miembro roto (false si no hay)
+			return splint()
+		"bandage_sterile":
+			if bleeding <= 0 and infection <= 0:
+				return false
+			bandage()
+			infection = 0
+			body_changed.emit()
+			return true
 		_:
 			return false
 
@@ -295,8 +324,66 @@ func _apply_item_effect(item: ItemData) -> bool:
 func _give_starting_items() -> void:
 	add_item(ITEM_VENDA, 1)
 	add_item(ITEM_RACION, 1)
+	add_item(ITEM_RAMA, 2)
 	money = 10
 	money_changed.emit()
+
+# --- Loot al derrotar enemigos ---
+
+## Procesa un array de IDs de items (loot_table del enemigo) y los mete
+## en el inventario si hay lugar. Devuelve una lista de nombres para mostrar.
+func process_loot(loot_table: Array) -> Array:
+	var gained: Array = []
+	for id in loot_table:
+		var item := items_by_id.get(str(id))
+		if item == null:
+			continue
+		if add_item(item, 1):
+			gained.append(item.display_name)
+	return gained
+
+# --- Crafteo ---
+
+const RECIPE_FOGATA := preload("res://data/recipes/fogota_recipe.tres")
+const RECIPE_VENDA_ESTERILIZADA := preload("res://data/recipes/venda_esterilizada_recipe.tres")
+var recipes: Array = [RECIPE_FOGATA, RECIPE_VENDA_ESTERILIZADA]
+
+## Devuelve las recetas que se pueden hacer con el inventario actual.
+func get_available_recipes() -> Array:
+	var available: Array = []
+	for recipe in recipes:
+		if _has_ingredients(recipe):
+			available.append(recipe)
+	return available
+
+func _has_ingredients(recipe: CraftRecipe) -> bool:
+	for ing_id in recipe.ingredients.keys():
+		var item := items_by_id.get(str(ing_id))
+		if item == null:
+			return false
+		var needed: int = recipe.ingredients[ing_id]
+		if int(inventory.get(item, 0)) < needed:
+			return false
+	return true
+
+## Ejecuta una receta. Consume los ingredientes y da el resultado.
+## Devuelve true si se pudo craftear.
+func craft(recipe: CraftRecipe) -> bool:
+	if not _has_ingredients(recipe):
+		return false
+	for ing_id in recipe.ingredients.keys():
+		var item := items_by_id.get(str(ing_id))
+		if item == null:
+			return false
+		var needed: int = recipe.ingredients[ing_id]
+		inventory[item] -= needed
+		if inventory[item] <= 0:
+			inventory.erase(item)
+	var result := items_by_id.get(recipe.result_id)
+	if result != null:
+		inventory[result] = int(inventory.get(result, 0)) + recipe.result_qty
+	inventory_changed.emit()
+	return true
 
 # --- Tienda ---
 

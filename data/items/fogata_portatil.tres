@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/item_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "fogata_portatil"
+display_name = "Fogata"
+description = "Fuego para combatir el frío. Dura un rato."
+effect = "warm"
+amount = 80
+price = 0

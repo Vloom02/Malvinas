@@ -5,10 +5,12 @@ extends CanvasLayer
 
 @onready var panel: Panel = $Panel
 @onready var list: VBoxContainer = $Panel/List
+@onready var craft_btn: Button = $Panel/CraftBtn
 
 func _ready() -> void:
 	visible = false
 	GameState.inventory_changed.connect(_refresh)
+	craft_btn.pressed.connect(_open_crafting)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("inventory"):
@@ -54,3 +56,11 @@ func _use(item: ItemData) -> void:
 	var ok := GameState.use_item(item)
 	if not ok:
 		print("[Inventario] No tiene sentido usar %s ahora." % item.display_name)
+
+func _open_crafting() -> void:
+	_close()
+	var crafting := get_tree().root.find_child("Crafting", true, false)
+	if crafting == null:
+		crafting = preload("res://scenes/ui/crafting.tscn").instantiate()
+		get_tree().root.add_child(crafting)
+	crafting.open()

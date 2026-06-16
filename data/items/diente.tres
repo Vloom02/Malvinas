@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/item_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "diente"
+display_name = "Diente"
+description = "Un diente humano. Podría servir para algo."
+effect = ""
+amount = 0
+price = 2

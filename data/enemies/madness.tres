@@ -13,7 +13,7 @@ body_parts = {
 }
 attack = 16
 defense = 2
-loot_table = Array[String]([])
+loot_table = Array[String](["diente"])
 is_boss = true
 power_name = "Aullido devorador"
 power_damage = 26

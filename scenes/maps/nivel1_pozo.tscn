@@ -120,6 +120,10 @@ position = Vector2(480, 250)
 position = Vector2(590, 300)
 target_scene = "res://scenes/maps/naval_barco.tscn"
 target_spawn = "Entrada"
+locked = true
+locked_message = "Está atrancada del otro lado. Pesado."
+force_dc = 14
+force_success_msg = "Lográs forzar la escotilla. Se abre de golpe."
 
 [node name="CartelEscotilla" type="Label" parent="."]
 offset_left = 520.0

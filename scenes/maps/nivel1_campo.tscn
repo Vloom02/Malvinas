@@ -28,6 +28,8 @@ size = Vector2(16, 360)
 
 [node name="Campo" type="Node2D"]
 script = ExtResource("11")
+encounter_chance = 0.15
+stealth_dc = 12
 
 [node name="Backdrop" type="ColorRect" parent="."]
 offset_right = 640.0
@@ -129,6 +131,13 @@ sprite_texture = ExtResource("19")
 label_text = "Soldado"
 unique_id = "campo_soldado"
 
+[node name="CadáverCampo" parent="." instance=ExtResource("18")]
+position = Vector2(350, 230)
+message = "Un soldado boca arriba, los ojos abiertos. Hielo en las pestañas. Lleva muerto días."
+pickup_id = "campo_cadaver"
+journal_entry = "Encontré un soldado muerto en el campo. La cara congelada en un grito."
+sanity_cost = 8
+
 [node name="Palanca" parent="." instance=ExtResource("18")]
 position = Vector2(560, 285)
 message = "Una palanca de hierro oxidada en un poste. La accionás con todo tu peso.\nUn chirrido metálico responde a lo lejos."
@@ -146,6 +155,8 @@ target_spawn = "Entrada"
 locked = true
 unlock_flag = "abrir_pozo"
 locked_message = "La escotilla al pozo está trabada. Tiene que haber una palanca por acá."
+force_dc = 16
+force_success_msg = "Forzás la puerta con violencia. Los goznes saltan."
 
 [node name="Player" parent="." instance=ExtResource("1")]
 position = Vector2(110, 190)

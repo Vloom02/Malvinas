@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/item_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "alcohol"
+display_name = "Alcohol"
+description = "Alcohol de quemar. Sirve para prender fuego o desinfectar."
+effect = "warm"
+amount = 20
+price = 4

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="DataDialogue" format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/data_dialogue.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+text = "Baja la voz. «Vi cosas. En la niebla. Soldados que ya no están... pero se mueven. No te alejes de la trinchera de noche.»"
+options = [{
+"text": "Tenés miedo vos también.",
+"next_path": "",
+"set_flag": "",
+"journal_entry": "El sargento vio cosas en la niebla. No es el único que las ve.",
+"sanity_cost": 3
+}, {
+"text": "Son cuentos para asustar pibes.",
+"next_path": "",
+"set_flag": "",
+"journal_entry": "",
+"sanity_cost": 0
+}]

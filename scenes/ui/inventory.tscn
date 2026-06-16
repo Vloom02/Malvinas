@@ -30,3 +30,10 @@ offset_left = 12.0
 offset_top = 36.0
 offset_right = 328.0
 offset_bottom = 228.0
+
+[node name="CraftBtn" type="Button" parent="Panel"]
+offset_left = 12.0
+offset_top = 232.0
+offset_right = 328.0
+offset_bottom = 252.0
+text = "Craftear"

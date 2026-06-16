@@ -15,7 +15,7 @@ body_parts = {
 }
 attack = 14
 defense = 4
-loot_table = Array[String]([])
+loot_table = Array[String](["carne_podrida", "diente"])
 is_boss = false
 power_name = ""
 power_damage = 0

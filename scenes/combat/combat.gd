@@ -343,6 +343,12 @@ func _win() -> void:
 		GameState.money += enemy.reward
 		GameState.money_changed.emit()
 		_log("Le revisás los bolsillos: +%d cigarrillos." % enemy.reward)
+	if not enemy.loot_table.is_empty():
+		var gained := GameState.process_loot(enemy.loot_table)
+		if gained.is_empty():
+			_log("No te entra más nada en el inventario.")
+		else:
+			_log("Botín: " + ", ".join(gained))
 	if GameState.pending_enemy_path.contains("madness"):
 		GameState.recover_from_madness()
 		_log("Recuperás algo de cordura...")

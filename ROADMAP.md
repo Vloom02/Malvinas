@@ -67,21 +67,18 @@ Este documento es la lista viva: vamos tildando `[x]` lo que se completa.
       enfrentada vos vs enemigo, `Dice.versus`, mostrada en la ventana de diálogos),
       esquivar poderes de jefe, y firmar el pulso al atacar herido. El combate base
       sigue determinista.
-- [x] **Saves con dado**: frío/hipotermia (charco helado) e infección por heridas
-      sin tratar. Falta: saves de cordura, forzar/sigilo, primeros auxilios.
+- [x] **Saves con dado**: frío/hipotermia (charco helado), infección por heridas,
+      cordura, forzar puertas y sigilo para evitar emboscadas.
 - [x] **IA enemiga**: el enemigo apunta a tus miembros y puede quebrártelos; el
       "peligro" lo hace pegar más fuerte. **Huir** (dado) y **aturdir** (destruir parte).
 - [x] **Estado persistente**: enemigos muertos no reaparecen, items no se repiten,
       flags, palancas/puertas con traba, contador de peligro, emboscadas opcionales.
-- [x] **Diálogos con opciones**, **diario** de lore (J) y **finales por decisión**.
-- [x] **Caja de diálogos base** (autoload `Dialogue`, mensajes con E). Falta:
-      diálogos con NPCs, ramas/elecciones, retratos.
-- [x] **Guardar/cargar** reportándote a un NPC (el Sargento): guarda estado e
-      inventario a disco. También es **tienda** (comprar con cigarrillos). Falta:
-      hacer el guardado un recurso más escaso/costoso, y un menú de título.
+- [x] **Diálogos con opciones**, **diario** de lore (J), **finales por decisión** y **diálogos data-driven** (DataDialogue .tres con ramas).
+- [x] **Caja de diálogos base** (autoload `Dialogue`, mensajes con E, ramas/elecciones via DataDialogue).
+- [x] **Guardar/cargar** reportándote al Sargento (cuesta 3 cigarrillos). Tienda con cigarrillos como moneda.
 - [x] **Transición entre salas** (puertas + fundido a negro + puntos de aparición).
       Base lista con 2 salas conectadas; falta armar el dungeon real.
-- [ ] **Loot y crafteo** básico.
+- [x] **Loot y crafteo** básico: enemigos sueltan items, 2 recetas (fogata, venda esterilizada), UI de crafteo.
 
 ## 🎨 FASE 3 — Producción de contenido (el juego en sí)
 

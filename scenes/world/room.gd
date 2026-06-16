@@ -6,6 +6,8 @@ extends Node2D
 @export var encounter_chance: float = 0.0
 ## Enemigo de la emboscada.
 @export_file("*.tres") var encounter_enemy: String = "res://data/enemies/ghoul.tres"
+## DC para notar la emboscada antes de que ocurra (0 = sin chance de evitarla).
+@export var stealth_dc: int = 0
 
 func _ready() -> void:
 	if GameState.next_spawn != "":
@@ -16,7 +18,20 @@ func _ready() -> void:
 		GameState.next_spawn = ""
 
 	if encounter_chance > 0.0 and Dice.chance(encounter_chance):
-		call_deferred("_ambush")
+		if stealth_dc > 0:
+			call_deferred("_stealth_check")
+		else:
+			call_deferred("_ambush")
+
+func _stealth_check() -> void:
+	var r := Dice.check(2, stealth_dc)
+	if r["success"]:
+		Dialogue.say("Algo se mueve en las sombras. Te agazapás a tiempo.\n[Percepción: d20 %d+2=%d vs %d]" % [r["die"], r["total"], stealth_dc])
+		await Dialogue.finished
+		return
+	Dialogue.say("No viste venir lo que te esperaba.\n[Percepción: d20 %d+2=%d vs %d — fallaste]" % [r["die"], r["total"], stealth_dc])
+	await Dialogue.finished
+	_ambush()
 
 func _ambush() -> void:
 	var scene := get_tree().current_scene

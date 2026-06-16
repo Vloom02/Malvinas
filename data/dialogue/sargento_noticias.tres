@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="DataDialogue" format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/data_dialogue.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+text = "«Llamadas de radio cortadas. Nadie va a venir a sacarnos. Estamos solos.»\nEl viento silba entre las bolsas de arena."
+options = [{
+"text": "¿Qué se supone que haga?",
+"next_path": "",
+"set_flag": "",
+"journal_entry": "El sargento confirmó que estamos aislados. No hay ayuda.",
+"sanity_cost": 1
+}, {
+"text": "Ya me imaginaba.",
+"next_path": "",
+"set_flag": "",
+"journal_entry": "",
+"sanity_cost": 0
+}]

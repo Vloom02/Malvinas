@@ -56,8 +56,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		if journal_entry != "":
 			GameState.add_journal(journal_entry)
 		if sanity_cost > 0:
-			GameState.drain_sanity(sanity_cost)
-			text += "\n\n(Algo se quiebra en tu mente. -%d cordura.)" % sanity_cost
+			var r := GameState.sanity_save(14, sanity_cost)
+			if r["success"]:
+				text += "\n\nTe horroriza, pero mantecés la cordura."
+			else:
+				text += "\n\n(Algo se quiebra en tu mente. -%d cordura.)" % sanity_cost
 		if gives_item != null and not _item_taken:
 			if GameState.add_item(gives_item, give_qty):
 				_item_taken = true
