@@ -29,7 +29,7 @@ func _build_frames() -> SpriteFrames:
 	sf.remove_animation("default")
 	var walk_tex: Texture2D = load(SHEETS + "/walk.png")
 	var idle_tex: Texture2D = load(SHEETS + "/idle.png")
-	for dir in DIR_ROW.keys():
+	for dir: String in DIR_ROW.keys():
 		var row: int = DIR_ROW[dir]
 		# Caminar: cuadros 1..8 (el 0 es la pose parada).
 		var wname := "walk_" + dir
