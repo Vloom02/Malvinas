@@ -96,7 +96,7 @@ const SAVE_PATH := "user://save.json"
 ## Moneda de trueque: cigarrillos (lo que se usaba entre soldados).
 var money: int = 0
 ## Items que vende el sargento.
-	var shop_items: Array[ItemData] = [ITEM_VENDA, ITEM_RACION, ITEM_MORFINA, ITEM_ANTIBIOTICOS, ITEM_FOSFOROS, ITEM_TABLILLA, ITEM_RAMA, ITEM_ALCOHOL]
+var shop_items: Array[ItemData] = [ITEM_VENDA, ITEM_RACION, ITEM_MORFINA, ITEM_ANTIBIOTICOS, ITEM_FOSFOROS, ITEM_TABLILLA, ITEM_RAMA, ITEM_ALCOHOL]
 ## id -> ItemData (para reconstruir el inventario al cargar).
 var items_by_id: Dictionary = {}
 
