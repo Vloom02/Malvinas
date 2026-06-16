@@ -20,7 +20,7 @@ func open() -> void:
 	get_tree().paused = true
 	_refresh()
 
-func close() -> void:
+func _close() -> void:
 	visible = false
 	get_tree().paused = false
 
@@ -38,7 +38,7 @@ func _refresh() -> void:
 		var ingredients_text := ""
 		var first := true
 		for ing_id in recipe.ingredients.keys():
-			var item := GameState.items_by_id.get(str(ing_id))
+			var item: ItemData = GameState.items_by_id.get(str(ing_id))
 			if not first:
 				ingredients_text += ", "
 			first = false

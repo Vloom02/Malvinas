@@ -17,6 +17,8 @@ class_name EnemyEncounter
 @export var sprite_texture: Texture2D
 ## Texto del cartel (si lo dejás vacío, usa el de la escena).
 @export var label_text: String = ""
+## Máscara de colisión para paredes (capas físicas que bloquean el chase).
+@export var wall_mask: int = 1
 
 var _triggered: bool = false
 
@@ -37,10 +39,18 @@ func _physics_process(delta: float) -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	if player == null:
 		return
-	# Flota hacia el jugador si está cerca (atraviesa todo, fantasmal).
 	var to_player: Vector2 = player.global_position - global_position
-	if to_player.length() < chase_range:
-		global_position += to_player.normalized() * chase_speed * delta
+	if to_player.length() >= chase_range:
+		return
+
+	# El fantasma flota hacia el jugador pero las paredes lo frenan.
+	var dir := to_player.normalized()
+	$RayCast2D.target_position = dir * 32.0
+	$RayCast2D.force_raycast_update()
+	if $RayCast2D.is_colliding():
+		return
+
+	global_position += dir * chase_speed * delta
 
 func _on_body_entered(body: Node) -> void:
 	if _triggered:

@@ -14,11 +14,12 @@ func _ready() -> void:
 
 func _on_new() -> void:
 	GameState.new_game()
+	AudioManager.play_music("res://assets/audio/ambient.ogg", -10.0)
 	get_tree().change_scene_to_file(NIVEL_INICIO)
 
 func _on_continue() -> void:
-	# load_game() restaura el estado y cambia a la sala guardada.
 	if not GameState.load_game():
+		AudioManager.play_music("res://assets/audio/ambient.ogg", -10.0)
 		get_tree().change_scene_to_file(NIVEL_INICIO)
 
 func _on_quit() -> void:

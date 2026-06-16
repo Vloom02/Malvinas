@@ -10,28 +10,40 @@ extends Control
 ## Ganás destruyendo cabeza o torso. Perdés si tu vida llega a 0.
 
 @onready var enemy_name_label: Label = $EnemyName
+@onready var enemy_sprite: TextureRect = $EnemySprite
+@onready var player_sprite: TextureRect = $PlayerSprite
 @onready var parts_list: VBoxContainer = $PartsList
 @onready var actions: VBoxContainer = $Actions
 @onready var log_label: Label = $Log
 @onready var player_info: Label = $PlayerInfo
 @onready var madness_tint: ColorRect = $MadnessTint
 
-# --- Tuning ---
-const PLAYER_DMG := 11      # daño con pulso firme (determinista)
-const PULSE_MOD := 2        # modificador de la tirada de pulso
-const PULSE_DC := 11        # dificultad de mantener el pulso estando herido
-const DODGE_MOD := 3        # modificador para esquivar poderes de jefe
-const WOUNDED_HP := 35      # debajo de esto, te tiembla el pulso
+const PLAYER_TEXTURE := preload("res://assets/sprites/conscripto/rotations/south.png")
+
+## Rutas de audio (dejar vacío = silencio hasta tener los .ogg).
+const SFX_HIT := "res://assets/audio/hit.wav"
+const SFX_PLAYER_ATTACK := "res://assets/audio/player_attack.wav"
+const SFX_BANDAGE := "res://assets/audio/bandage.wav"
+const SFX_DODGE := "res://assets/audio/dodge.wav"
+const SFX_VICTORY := "res://assets/audio/victory.wav"
+const SFX_DEATH := "res://assets/audio/death.wav"
+const MUSIC_COMBAT := "res://assets/audio/combat.ogg"
+
+const PLAYER_DMG := 11
+const PULSE_MOD := 2
+const PULSE_DC := 11
+const DODGE_MOD := 3
+const WOUNDED_HP := 35
 
 var enemy: EnemyData
 var parts_hp: Dictionary = {}
 var part_labels: Dictionary = {}
 var is_player_turn: bool = true
 var combat_over: bool = false
-var _pending_dodge: bool = false   # esperando que esquives un poder
-var _power_cooldown: bool = false  # el jefe no encadena poderes
-var _enemy_staggered: bool = false # le destruiste una parte: pierde el turno
-var _resolved: bool = false        # ya se resolvió (ganaste/perdiste): no repetir
+var _pending_dodge: bool = false
+var _power_cooldown: bool = false
+var _enemy_staggered: bool = false
+var _resolved: bool = false
 
 func _ready() -> void:
 	var path := GameState.pending_enemy_path
@@ -41,6 +53,11 @@ func _ready() -> void:
 	parts_hp = enemy.body_parts.duplicate()
 
 	enemy_name_label.text = enemy.display_name
+	if enemy.sprite != null:
+		enemy_sprite.texture = enemy.sprite
+		_begin_enemy_breathing()
+	player_sprite.texture = PLAYER_TEXTURE
+	_style_ui()
 	_build_parts_display()
 	_build_action_buttons()
 	_refresh_player_info()
@@ -50,14 +67,45 @@ func _ready() -> void:
 
 	if path.contains("madness"):
 		_begin_madness()
+	AudioManager.play_music(MUSIC_COMBAT, -8.0)
+
+func _exit_tree() -> void:
+	if GameState.player_died.is_connected(_on_player_died):
+		GameState.player_died.disconnect(_on_player_died)
 
 func _process(_delta: float) -> void:
 	if not combat_over:
-		_refresh_player_info()  # la vida puede bajar en vivo si sangrás
+		_refresh_player_info()
 
 func _on_player_died() -> void:
 	if not combat_over:
 		_lose()
+
+func _begin_enemy_breathing() -> void:
+	var tw := create_tween().set_loops()
+	tw.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_method(func(v: float): enemy_sprite.scale = Vector2(v, v), 1.0, 1.03, 2.0)
+	tw.tween_method(func(v: float): enemy_sprite.scale = Vector2(v, v), 1.03, 1.0, 2.0)
+
+func _style_ui() -> void:
+	var font_path := "res://assets/fonts/GrenzeGotisch.ttf"
+	var fnt := load(font_path) as FontFile
+	if fnt == null:
+		return
+	fnt.fixed_size = 16
+	var theme := Theme.new()
+	theme.set_default_font(fnt)
+	theme.set_font("font", "Label", fnt)
+	theme.set_font("font", "Button", fnt)
+	theme.set_font_size("font_size", "Label", 14)
+	theme.set_font_size("font_size", "Button", 18)
+	theme.set_color("font_color", "Label", Color(0.75, 0.7, 0.65))
+	theme.set_color("font_color", "Button", Color(0.8, 0.75, 0.7))
+	theme.set_color("font_hover_color", "Button", Color(1.0, 0.9, 0.8))
+	theme.set_stylebox("panel", "Panel", null)
+	theme.set_constant("h_separation", "Button", 4)
+	for c in [enemy_name_label, log_label, player_info, parts_list, actions]:
+		c.theme = theme
 
 func _begin_madness() -> void:
 	_log("La cordura te abandona. Algo sin rostro se arrastra hacia vos.")
@@ -96,7 +144,6 @@ func _clear_actions() -> void:
 	for c in actions.get_children():
 		c.queue_free()
 
-## Lugares donde el enemigo te puede pegar (los miembros son quebrables).
 const TARGETS := [
 	{"key": "cabeza", "name": "la cabeza"},
 	{"key": "torso", "name": "el torso"},
@@ -106,7 +153,6 @@ const TARGETS := [
 	{"key": "pierna_der", "name": "la pierna derecha"},
 ]
 
-## Estás "herido": te tiembla el pulso (sangrando, con poca vida o brazo roto).
 func _is_wounded() -> bool:
 	return GameState.bleeding > 0 or GameState.player_hp < WOUNDED_HP or GameState.broken_arms() > 0
 
@@ -121,8 +167,7 @@ func _on_attack_part(part: String) -> void:
 	var dmg := PLAYER_DMG
 
 	if _is_wounded():
-		# Pulso tembloroso: el dado decide si firmás el tiro.
-		var r := Dice.check(PULSE_MOD, PULSE_DC)
+		var r: Dictionary = Dice.check(PULSE_MOD, PULSE_DC)
 		if r["fumble"]:
 			dmg = 0
 			_log("Te tiembla el pulso y errás del todo  [d20 %d]" % r["die"])
@@ -141,6 +186,7 @@ func _on_attack_part(part: String) -> void:
 	if dmg > 0:
 		parts_hp[part] = maxi(0, parts_hp[part] - dmg)
 		_log("Golpeás %s: %d de daño." % [part, dmg])
+		AudioManager.play_sfx(SFX_PLAYER_ATTACK, -3.0)
 		_update_part_label(part)
 		if parts_hp[part] == 0:
 			_log("¡Destruiste %s! Queda tambaleándose." % part)
@@ -165,6 +211,7 @@ func _on_bandage() -> void:
 
 	is_player_turn = false
 	GameState.use_item(GameState.ITEM_VENDA)
+	AudioManager.play_sfx(SFX_BANDAGE, -2.0)
 	_log("Te vendás a las apuradas. El sangrado se detiene.")
 	await get_tree().create_timer(0.6).timeout
 	_enemy_turn()
@@ -173,14 +220,12 @@ func _enemy_turn() -> void:
 	if combat_over:
 		return
 
-	# Si le destruiste una parte, está aturdido: pierde el turno.
 	if _enemy_staggered:
 		_enemy_staggered = false
 		_log("%s se tambalea y pierde el turno." % enemy.display_name)
 		is_player_turn = true
 		return
 
-	# ¿El jefe carga un poder? → telegrafía y tenés que esquivar (tu turno).
 	if enemy.is_boss and enemy.power_name != "" and not _power_cooldown and Dice.chance(enemy.power_chance):
 		_power_cooldown = true
 		_pending_dodge = true
@@ -189,13 +234,15 @@ func _enemy_turn() -> void:
 		is_player_turn = true
 		return
 
-	# Ataque normal: determinista, sin dado. El "peligro" lo hace pegar más fuerte.
 	_power_cooldown = false
 	var dmg := maxi(1, enemy.attack + GameState.danger)
 	var t: Dictionary = TARGETS[randi() % TARGETS.size()]
 	GameState.damage_player(dmg)
+	AudioManager.play_sfx(SFX_HIT, -2.0)
 	_log("%s te golpea en %s: -%d de vida." % [enemy.display_name, t["name"], dmg])
-	# Si pega un miembro, puede quebrártelo (permanente).
+	_shake(4.0, 0.25)
+	_spawn_blood(Vector2(randf_range(340, 440), randf_range(42, 142)))
+
 	if GameState.body_parts_state.has(t["key"]) and Dice.chance(0.22):
 		if GameState.break_part(t["key"]):
 			_log("¡CRAC! Te quiebra %s. Queda roto." % t["name"])
@@ -222,6 +269,7 @@ func _on_dodge() -> void:
 	var r := Dice.check(DODGE_MOD, enemy.power_dc)
 
 	if r["success"]:
+		AudioManager.play_sfx(SFX_DODGE, -4.0)
 		if r["crit"]:
 			_log("¡Esquive perfecto! (20 natural) Ni te roza.")
 		else:
@@ -231,19 +279,20 @@ func _on_dodge() -> void:
 		var dmg := maxi(1, enemy.power_damage)
 		GameState.damage_player(dmg)
 		GameState.apply_bleeding(1)
+		AudioManager.play_sfx(SFX_HIT, -2.0)
 		_log("«%s» te da de lleno: -%d de vida y te abre una herida  [d20 %d+%d=%d vs %d]" % [
 			enemy.power_name, dmg, r["die"], r["modifier"], r["total"], enemy.power_dc])
 		_refresh_player_info()
+		_shake(6.0, 0.35)
+		_spawn_blood(Vector2(randf_range(360, 440), randf_range(42, 142)))
 
-	_build_action_buttons()  # vuelven las acciones normales
+	_build_action_buttons()
 	if GameState.player_hp <= 0:
 		_lose()
 		return
 	await get_tree().create_timer(0.7).timeout
 	_enemy_turn()
 
-## Opción de tirar los dados en combate: tirada ENFRENTADA (vos vs enemigo).
-## Los dos dados son aleatorios. El resultado se muestra en la ventana de diálogos.
 func _on_risky_attack() -> void:
 	if combat_over or not is_player_turn or _pending_dodge:
 		return
@@ -269,6 +318,8 @@ func _on_risky_attack() -> void:
 		GameState.damage_player(dmg)
 		GameState.apply_bleeding(1)
 		text += "%s te lee el movimiento: -%d de vida y te abre una herida." % [enemy.display_name, dmg]
+		_shake(5.0, 0.3)
+		_spawn_blood(Vector2(randf_range(360, 440), randf_range(42, 142)))
 
 	_log(text)
 	Dialogue.say(text)
@@ -282,8 +333,6 @@ func _on_risky_attack() -> void:
 		return
 	_enemy_turn()
 
-## Huir: tirada de reflejos. Si sale, escapás (el enemigo queda vivo). Si no,
-## te alcanza y juega su turno.
 func _on_flee() -> void:
 	if combat_over or not is_player_turn or _pending_dodge:
 		return
@@ -302,7 +351,6 @@ func _on_flee() -> void:
 		await Dialogue.finished
 		_enemy_turn()
 
-## Devuelve la parte viva con más HP (el "ataque arriesgado" pega a la más dura).
 func _strongest_part() -> String:
 	var best := ""
 	var best_hp := -1
@@ -333,11 +381,40 @@ func _refresh_player_info() -> void:
 		s += "\nRoto: " + ", ".join(roto)
 	player_info.text = s
 
+func _shake(intensity: float, duration: float) -> void:
+	var original := position
+	var offset := Vector2(randf_range(-intensity, intensity), randf_range(-intensity, intensity))
+	var tw := create_tween().set_trans(Tween.TRANS_QUAD)
+	tw.tween_property(self, "position", original + offset, duration * 0.5)
+	tw.tween_property(self, "position", original, duration * 0.5)
+
+func _spawn_blood(at: Vector2) -> void:
+	var p := CPUParticles2D.new()
+	p.amount = 8
+	p.lifetime = 0.6
+	p.explosiveness = 0.8
+	p.direction = Vector2(0, -1)
+	p.spread = 180.0
+	p.initial_velocity_min = 30.0
+	p.initial_velocity_max = 80.0
+	p.gravity = Vector2(0, 120)
+	p.scale_min = 0.5
+	p.scale_max = 1.5
+	p.color = Color(0.6, 0.05, 0.05)
+	p.one_shot = true
+	p.position = at
+	add_child(p)
+	p.emitting = true
+	await get_tree().create_timer(1.0).timeout
+	if is_instance_valid(p):
+		p.queue_free()
+
 func _win() -> void:
 	if _resolved:
 		return
 	_resolved = true
 	combat_over = true
+	AudioManager.play_sfx(SFX_VICTORY, -2.0)
 	_log("Derrotaste a %s." % enemy.display_name)
 	if enemy.reward > 0:
 		GameState.money += enemy.reward
@@ -353,6 +430,7 @@ func _win() -> void:
 		GameState.recover_from_madness()
 		_log("Recuperás algo de cordura...")
 	await get_tree().create_timer(1.5).timeout
+	AudioManager.stop_music()
 	GameState.end_combat()
 
 func _lose() -> void:
@@ -360,6 +438,7 @@ func _lose() -> void:
 		return
 	_resolved = true
 	combat_over = true
+	AudioManager.play_sfx(SFX_DEATH, -1.0)
 	_log("Has muerto.")
 	await get_tree().create_timer(1.5).timeout
 	GameState.game_over()

@@ -150,11 +150,13 @@ func _on_player_died_global() -> void:
 
 # --- Tick del cuerpo: sangrado (rápido) + frío/infección (lento) ---
 func _process(delta: float) -> void:
+	if get_tree().paused:
+		return
 	if bleeding > 0 and player_hp > 0:
 		_bleed_timer += delta
 		while _bleed_timer >= BLEED_INTERVAL:
 			_bleed_timer -= BLEED_INTERVAL
-			player_hp -= bleeding   # cada herida sangrante = 1 de daño por tick
+			player_hp -= bleeding
 
 	_body_timer += delta
 	while _body_timer >= 1.0:
@@ -335,7 +337,7 @@ func _give_starting_items() -> void:
 func process_loot(loot_table: Array) -> Array:
 	var gained: Array = []
 	for id in loot_table:
-		var item := items_by_id.get(str(id))
+		var item: ItemData = items_by_id.get(str(id))
 		if item == null:
 			continue
 		if add_item(item, 1):
@@ -358,7 +360,7 @@ func get_available_recipes() -> Array:
 
 func _has_ingredients(recipe: CraftRecipe) -> bool:
 	for ing_id in recipe.ingredients.keys():
-		var item := items_by_id.get(str(ing_id))
+		var item: ItemData = items_by_id.get(str(ing_id))
 		if item == null:
 			return false
 		var needed: int = recipe.ingredients[ing_id]
@@ -372,14 +374,14 @@ func craft(recipe: CraftRecipe) -> bool:
 	if not _has_ingredients(recipe):
 		return false
 	for ing_id in recipe.ingredients.keys():
-		var item := items_by_id.get(str(ing_id))
+		var item: ItemData = items_by_id.get(str(ing_id))
 		if item == null:
 			return false
 		var needed: int = recipe.ingredients[ing_id]
 		inventory[item] -= needed
 		if inventory[item] <= 0:
 			inventory.erase(item)
-	var result := items_by_id.get(recipe.result_id)
+	var result: ItemData = items_by_id.get(recipe.result_id)
 	if result != null:
 		inventory[result] = int(inventory.get(result, 0)) + recipe.result_qty
 	inventory_changed.emit()
@@ -512,4 +514,6 @@ func recover_from_madness() -> void:
 	sanity = int(SANITY_MAX / 2.0)
 
 func _change_scene(path: String) -> void:
+	if path.contains("maps/") or path.contains("test_room"):
+		AudioManager.play_music("res://assets/audio/ambient.ogg", -10.0)
 	get_tree().call_deferred("change_scene_to_file", path)

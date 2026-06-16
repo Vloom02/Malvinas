@@ -23,3 +23,8 @@ offset_right = 48.0
 offset_bottom = -38.0
 text = "Espectro"
 horizontal_alignment = 1
+
+[node name="RayCast2D" type="RayCast2D" parent="."]
+enabled = true
+target_position = Vector2(0, 0)
+exclude_parent = true

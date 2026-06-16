@@ -1,9 +1,11 @@
 [gd_resource type="Resource" script_class="EnemyData" format=3 uid="uid://cle1cprg4y2yw"]
 
 [ext_resource type="Script" uid="uid://bfhdwmuykvt85" path="res://data/enemy_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemies/espectro_combat.png" id="2"]
 
 [resource]
 script = ExtResource("1")
+sprite = ExtResource("2")
 display_name = "Espectro"
 body_parts = {
 "brazo_der": 18,
