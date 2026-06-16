@@ -13,6 +13,7 @@ signal inventory_changed     # se agregó/usó un item
 signal money_changed         # cambió la plata (cigarrillos)
 signal player_died
 signal sanity_depleted
+signal hallucination(type: String)  # "whisper", "shadow", "screen"
 
 # --- Topes ---
 const HUNGER_MAX := 100
@@ -89,6 +90,18 @@ const ITEM_CARNE_PODRIDA := preload("res://data/items/carne_podrida.tres")
 const ITEM_DIENTE := preload("res://data/items/diente.tres")
 const ITEM_FOGATA_PORTATIL := preload("res://data/items/fogata_portatil.tres")
 const ITEM_VENDA_ESTERILIZADA := preload("res://data/items/venda_esterilizada.tres")
+const ITEM_LINTERNA := preload("res://data/items/linterna.tres")
+const ITEM_PILAS := preload("res://data/items/pilas.tres")
+
+# --- Luz ambiental por mapa ---
+const AMBIENT_LIGHT_MAP: Dictionary = {
+	"res://scenes/maps/test_room.tscn": 80,
+	"res://scenes/maps/room2.tscn": 60,
+	"res://scenes/maps/nivel1_trinchera.tscn": 80,
+	"res://scenes/maps/nivel1_pozo.tscn": 30,
+	"res://scenes/maps/nivel1_campo.tscn": 90,
+	"res://scenes/maps/naval_barco.tscn": 20,
+}
 var inventory: Dictionary = {}   # ItemData -> cantidad
 
 # --- Dinero / tienda / guardado ---
@@ -96,9 +109,23 @@ const SAVE_PATH := "user://save.json"
 ## Moneda de trueque: cigarrillos (lo que se usaba entre soldados).
 var money: int = 0
 ## Items que vende el sargento.
-var shop_items: Array[ItemData] = [ITEM_VENDA, ITEM_RACION, ITEM_MORFINA, ITEM_ANTIBIOTICOS, ITEM_FOSFOROS, ITEM_TABLILLA, ITEM_RAMA, ITEM_ALCOHOL]
+var shop_items: Array[ItemData] = []
 ## id -> ItemData (para reconstruir el inventario al cargar).
 var items_by_id: Dictionary = {}
+## Guardado limitado: solo se puede guardar en refugios/trincheras.
+var can_save: bool = false
+## Modo de juego definido por la Consagración al inicio.
+var game_mode: String = "cabeza"  # "cabeza" (normal) o "cruz" (duro)
+## Luz ambiental del mapa actual (0-100).
+var ambient_light: int = 80
+var linterna_on: bool = false
+var light_battery: float = 100.0
+var _hallu_timer: float = 0.0
+
+func effective_light() -> int:
+	if linterna_on and light_battery > 0:
+		return maxi(ambient_light, 40)
+	return ambient_light
 
 # --- Recursos con setter (avisan por señal y respetan límites) ---
 var hunger: int = HUNGER_MAX:
@@ -133,7 +160,9 @@ func _ready() -> void:
 		"rama": ITEM_RAMA, "alcohol": ITEM_ALCOHOL, "carne_podrida": ITEM_CARNE_PODRIDA,
 		"diente": ITEM_DIENTE, "fogata_portatil": ITEM_FOGATA_PORTATIL,
 		"venda_esterilizada": ITEM_VENDA_ESTERILIZADA,
+		"linterna": ITEM_LINTERNA, "pilas": ITEM_PILAS,
 	}
+	shop_items = [ITEM_VENDA, ITEM_RACION, ITEM_MORFINA, ITEM_ANTIBIOTICOS, ITEM_FOSFOROS, ITEM_TABLILLA, ITEM_RAMA, ITEM_ALCOHOL, ITEM_LINTERNA, ITEM_PILAS]
 	player_died.connect(_on_player_died_global)
 	_give_starting_items()
 
@@ -162,6 +191,18 @@ func _process(delta: float) -> void:
 	while _body_timer >= 1.0:
 		_body_timer -= 1.0
 		_tick_status()
+
+	if sanity > 0 and sanity < SANITY_MAX:
+		_hallu_timer += delta
+		var interval := 3.0 + (float(sanity) / float(SANITY_MAX)) * 12.0
+		if _hallu_timer >= interval:
+			_hallu_timer = 0.0
+			_trigger_hallucination()
+
+	if linterna_on and light_battery > 0:
+		light_battery = maxf(0.0, light_battery - delta * 2.0)
+		if light_battery <= 0:
+			linterna_on = false
 
 ## Cada segundo: el frío se va yendo (te calentás); la infección sube si tenés
 ## heridas abiertas y baja si no. Frío o infección al máximo = drenan vida.
@@ -272,21 +313,26 @@ func add_item(item: ItemData, qty: int = 1) -> bool:
 func use_item(item: ItemData) -> bool:
 	if int(inventory.get(item, 0)) <= 0:
 		return false
-	var consumed := _apply_item_effect(item)
-	if consumed:
-		inventory[item] -= 1
-		if inventory[item] <= 0:
-			inventory.erase(item)
-		inventory_changed.emit()
-	return consumed
+	var result := _apply_item_effect(item)
+	match result:
+		"consumed":
+			inventory[item] -= 1
+			if inventory[item] <= 0:
+				inventory.erase(item)
+			inventory_changed.emit()
+			return true
+		"used":
+			return true
+		_:
+			return false
 
-func _apply_item_effect(item: ItemData) -> bool:
+func _apply_item_effect(item: ItemData) -> String:
 	match item.effect:
 		"bandage":
 			if bleeding <= 0:
-				return false
+				return ""
 			bandage()
-			return true
+			return "consumed"
 		"ration":
 			hunger += item.amount
 			print("[Inventario] Comés. Hambre: %d/%d" % [hunger, HUNGER_MAX])
@@ -294,40 +340,54 @@ func _apply_item_effect(item: ItemData) -> bool:
 				infection = clampi(infection + 15, 0, 100)
 				body_changed.emit()
 				print("[Inventario] La carne podrida te hizo mal. Infección sube.")
-			return true
+			return "consumed"
 		"morphine":
 			player_hp += item.amount
-			return true
+			return "consumed"
 		"antibiotic":
 			if infection <= 0:
-				return false
+				return ""
 			infection = 0
 			body_changed.emit()
-			return true
+			return "consumed"
 		"warm":
 			if cold <= 0:
-				return false
+				return ""
 			cold = maxi(0, cold - item.amount)
 			body_changed.emit()
-			return true
+			return "consumed"
 		"splint":
-			return splint()
+			return "consumed" if splint() else ""
 		"bandage_sterile":
 			if bleeding <= 0 and infection <= 0:
-				return false
+				return ""
 			bandage()
 			infection = 0
 			body_changed.emit()
-			return true
+			return "consumed"
+		"light":
+			if light_battery <= 0:
+				return ""
+			linterna_on = not linterna_on
+			return "used"
+		"battery":
+			if light_battery >= 100:
+				return ""
+			light_battery = mini(100, light_battery + item.amount)
+			return "consumed"
 		_:
-			return false
+			return ""
 
 ## Items y plata con los que arrancás la partida.
 func _give_starting_items() -> void:
 	add_item(ITEM_VENDA, 1)
 	add_item(ITEM_RACION, 1)
 	add_item(ITEM_RAMA, 2)
-	money = 10
+	if game_mode == "cabeza":
+		money = 10
+		add_item(ITEM_LINTERNA, 1)
+	else:
+		money = 4
 	money_changed.emit()
 
 # --- Loot al derrotar enemigos ---
@@ -402,7 +462,19 @@ func buy_item(item: ItemData) -> bool:
 
 # --- Guardar / cargar (te reportás al sargento para guardar) ---
 
+func set_game_mode(mode: String) -> void:
+	game_mode = mode
+
+func allow_save() -> void:
+	can_save = true
+
+func disallow_save() -> void:
+	can_save = false
+
 func save_game() -> void:
+	if not can_save:
+		return
+	can_save = false
 	var inv := {}
 	for item in inventory.keys():
 		inv[item.id] = inventory[item]
@@ -412,6 +484,8 @@ func save_game() -> void:
 		"bleeding": bleeding, "cold": cold, "infection": infection,
 		"money": money, "inventory": inv, "flags": flags,
 		"parts": body_parts_state, "danger": danger, "journal": journal,
+		"game_mode": game_mode, "ambient_light": ambient_light,
+		"light_battery": light_battery,
 	}
 	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	f.store_string(JSON.stringify(data))
@@ -439,6 +513,10 @@ func load_game() -> bool:
 	money = int(data.get("money", 0))
 	money_changed.emit()
 	danger = int(data.get("danger", 0))
+	game_mode = str(data.get("game_mode", "cabeza"))
+	ambient_light = int(data.get("ambient_light", 80))
+	light_battery = float(data.get("light_battery", 100.0))
+	linterna_on = false
 	var jr = data.get("journal", [])
 	journal = jr if typeof(jr) == TYPE_ARRAY else []
 	inventory.clear()
@@ -462,6 +540,11 @@ func load_game() -> bool:
 func new_game() -> void:
 	_madness_triggered = false
 	_dead = false
+	can_save = false
+	linterna_on = false
+	light_battery = 100.0
+	ambient_light = 80
+	_hallu_timer = 0.0
 	flags.clear()
 	pending_kill_id = ""
 	danger = 0
@@ -502,6 +585,19 @@ func flee_combat() -> void:
 func game_over() -> void:
 	_change_scene("res://scenes/ui/game_over.tscn")
 
+func _trigger_hallucination() -> void:
+	var types: Array[String] = []
+	if sanity < 15:
+		types = ["whisper", "shadow", "screen"]
+	elif sanity < 30:
+		types = ["whisper", "shadow"]
+	elif sanity < 50:
+		types = ["whisper"]
+	if types.is_empty():
+		return
+	var t: String = types[randi() % types.size()]
+	hallucination.emit(t)
+
 func _trigger_madness() -> void:
 	pending_enemy_path = "res://data/enemies/madness.tres"
 	# Volvés a la sala donde estabas cuando se te quebró la cordura.
@@ -516,4 +612,5 @@ func recover_from_madness() -> void:
 func _change_scene(path: String) -> void:
 	if path.contains("maps/") or path.contains("test_room"):
 		AudioManager.play_music("res://assets/audio/ambient.ogg", -10.0)
+		ambient_light = AMBIENT_LIGHT_MAP.get(path, 80)
 	get_tree().call_deferred("change_scene_to_file", path)

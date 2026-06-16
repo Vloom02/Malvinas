@@ -44,6 +44,9 @@ var _pending_dodge: bool = false
 var _power_cooldown: bool = false
 var _enemy_staggered: bool = false
 var _resolved: bool = false
+var _guard_active: bool = false
+var _enemy_destroyed_parts: Dictionary = {}
+var _enemy_skip_turn: bool = false
 
 func _ready() -> void:
 	var path := GameState.pending_enemy_path
@@ -51,6 +54,11 @@ func _ready() -> void:
 		path = "res://data/enemies/ghoul.tres"
 	enemy = load(path) as EnemyData
 	parts_hp = enemy.body_parts.duplicate()
+	# Modo Cruz: enemigos más duros
+	if GameState.game_mode == "cruz":
+		for part in parts_hp.keys():
+			parts_hp[part] = int(parts_hp[part] * 1.3)
+		enemy.attack += 3
 
 	enemy_name_label.text = enemy.display_name
 	if enemy.sprite != null:
@@ -135,6 +143,10 @@ func _build_action_buttons() -> void:
 	heal.text = "Vendarte"
 	heal.pressed.connect(_on_bandage)
 	actions.add_child(heal)
+	var guard := Button.new()
+	guard.text = "Guardia"
+	guard.pressed.connect(_on_guard)
+	actions.add_child(guard)
 	var flee := Button.new()
 	flee.text = "Huir (dado)"
 	flee.pressed.connect(_on_flee)
@@ -189,8 +201,15 @@ func _on_attack_part(part: String) -> void:
 		AudioManager.play_sfx(SFX_PLAYER_ATTACK, -3.0)
 		_update_part_label(part)
 		if parts_hp[part] == 0:
-			_log("¡Destruiste %s! Queda tambaleándose." % part)
-			_enemy_staggered = true
+			_enemy_destroyed_parts[part] = true
+			_log("¡Destruiste %s!" % part)
+			if part in ["pierna_izq", "pierna_der"]:
+				_enemy_skip_turn = true
+				_log("%s pierde una pata y se arrastra." % enemy.display_name)
+			elif part in ["brazo_izq", "brazo_der"]:
+				_log("%s perdió un brazo, pega más débil." % enemy.display_name)
+			else:
+				_enemy_staggered = true
 
 	if _enemy_dead():
 		_win()
@@ -198,6 +217,20 @@ func _on_attack_part(part: String) -> void:
 
 	await get_tree().create_timer(0.6).timeout
 	_enemy_turn()
+
+func _on_guard() -> void:
+	if combat_over or not is_player_turn or _pending_dodge:
+		return
+	_guard_active = true
+	is_player_turn = false
+	_log("Te ponés en guardia.")
+	_enemy_turn()
+
+func _enemy_damage_mod() -> int:
+	var mod := 0
+	if _enemy_destroyed_parts.get("brazo_izq", false) and _enemy_destroyed_parts.get("brazo_der", false):
+		mod -= 4
+	return mod
 
 func _on_bandage() -> void:
 	if combat_over or not is_player_turn or _pending_dodge:
@@ -226,6 +259,12 @@ func _enemy_turn() -> void:
 		is_player_turn = true
 		return
 
+	if _enemy_skip_turn:
+		_enemy_skip_turn = false
+		_log("%s se arrastra sin poder alcanzarte." % enemy.display_name)
+		is_player_turn = true
+		return
+
 	if enemy.is_boss and enemy.power_name != "" and not _power_cooldown and Dice.chance(enemy.power_chance):
 		_power_cooldown = true
 		_pending_dodge = true
@@ -236,7 +275,14 @@ func _enemy_turn() -> void:
 
 	_power_cooldown = false
 	var dmg := maxi(1, enemy.attack + GameState.danger)
+	dmg = maxi(1, dmg + _enemy_damage_mod())
 	var t: Dictionary = TARGETS[randi() % TARGETS.size()]
+
+	if _guard_active:
+		dmg = maxi(1, int(dmg * 0.5))
+		_guard_active = false
+		_log("Bloqueás parte del golpe con la guardia.")
+
 	GameState.damage_player(dmg)
 	AudioManager.play_sfx(SFX_HIT, -2.0)
 	_log("%s te golpea en %s: -%d de vida." % [enemy.display_name, t["name"], dmg])
@@ -389,20 +435,25 @@ func _shake(intensity: float, duration: float) -> void:
 	tw.tween_property(self, "position", original, duration * 0.5)
 
 func _spawn_blood(at: Vector2) -> void:
-	var p := CPUParticles2D.new()
+	var p := GPUParticles2D.new()
 	p.amount = 8
 	p.lifetime = 0.6
 	p.explosiveness = 0.8
-	p.direction = Vector2(0, -1)
-	p.spread = 180.0
-	p.initial_velocity_min = 30.0
-	p.initial_velocity_max = 80.0
-	p.gravity = Vector2(0, 120)
-	p.scale_min = 0.5
-	p.scale_max = 1.5
-	p.color = Color(0.6, 0.05, 0.05)
 	p.one_shot = true
 	p.position = at
+	var img := Image.create(4, 4, false, Image.FORMAT_RGBA8)
+	img.fill(Color.WHITE)
+	p.texture = ImageTexture.create_from_image(img)
+	var mat := ParticleProcessMaterial.new()
+	mat.direction = Vector3(0, -1, 0)
+	mat.spread = 180.0
+	mat.initial_velocity_min = 30.0
+	mat.initial_velocity_max = 80.0
+	mat.gravity = Vector3(0, 120, 0)
+	mat.scale_min = 0.5
+	mat.scale_max = 1.5
+	mat.color = Color(0.6, 0.05, 0.05)
+	p.process_material = mat
 	add_child(p)
 	p.emitting = true
 	await get_tree().create_timer(1.0).timeout
@@ -444,4 +495,17 @@ func _lose() -> void:
 	GameState.game_over()
 
 func _log(msg: String) -> void:
+	if GameState.sanity < 25 and Dice.chance(0.4):
+		msg = _garble(msg)
 	log_label.text += msg + "\n"
+
+func _garble(s: String) -> String:
+	var result := ""
+	for c in s:
+		if Dice.chance(0.25):
+			result += "*"
+		elif Dice.chance(0.15):
+			result += char(randi_range(0x0410, 0x044F)) if randi() % 2 == 0 else "?"
+		else:
+			result += c
+	return result

@@ -125,6 +125,16 @@ position = Vector2(250, 250)
 [node name="Espectro" parent="." instance=ExtResource("3")]
 position = Vector2(320, 285)
 
+[node name="Pesadilla" parent="." instance=ExtResource("3")]
+position = Vector2(160, 50)
+enemy_path = "res://data/enemies/pesadilla.tres"
+sanity_threshold = 30
+
+[node name="Pesadilla2" parent="." instance=ExtResource("3")]
+position = Vector2(480, 50)
+enemy_path = "res://data/enemies/pesadilla.tres"
+sanity_threshold = 20
+
 [node name="PuertaRoom2" parent="." instance=ExtResource("11")]
 position = Vector2(600, 190)
 target_scene = "res://scenes/maps/room2.tscn"

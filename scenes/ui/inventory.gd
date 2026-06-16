@@ -56,6 +56,8 @@ func _use(item: ItemData) -> void:
 	var ok := GameState.use_item(item)
 	if not ok:
 		print("[Inventario] No tiene sentido usar %s ahora." % item.display_name)
+	else:
+		_close()
 
 func _open_crafting() -> void:
 	_close()

@@ -19,11 +19,14 @@ class_name EnemyEncounter
 @export var label_text: String = ""
 ## Máscara de colisión para paredes (capas físicas que bloquean el chase).
 @export var wall_mask: int = 1
+## Si la cordura del jugador es MAYOR a este valor, el enemigo es invisible
+## y no persigue (-1 = siempre visible).
+@export var sanity_threshold: int = -1
 
 var _triggered: bool = false
+var _visible_to_sanity: bool = true
 
 func _ready() -> void:
-	# Si ya lo mataste en esta partida, no reaparece.
 	if unique_id != "" and GameState.has_flag("dead_" + unique_id):
 		queue_free()
 		return
@@ -32,9 +35,39 @@ func _ready() -> void:
 	if label_text != "":
 		$Label.text = label_text
 	body_entered.connect(_on_body_entered)
+	_update_sanity_visibility()
+
+func _update_sanity_visibility() -> bool:
+	if sanity_threshold < 0:
+		_visible_to_sanity = true
+	else:
+		_visible_to_sanity = GameState.sanity <= sanity_threshold
+	$CollisionShape2D.disabled = not _visible_to_sanity
+	$Label.visible = _visible_to_sanity
+	return _visible_to_sanity
+
+func _process(_delta: float) -> void:
+	if sanity_threshold < 0:
+		return
+	var was := _visible_to_sanity
+	var now := _update_sanity_visibility()
+	if was == now:
+		return
+	if not is_instance_valid($Sprite2D):
+		return
+	if now:
+		visible = true
+		var tw := create_tween()
+		tw.tween_property($Sprite2D, "modulate", Color(1, 1, 1, 1), 0.6).from(Color(1, 1, 1, 0))
+	else:
+		var tw := create_tween()
+		tw.tween_property($Sprite2D, "modulate", Color(1, 1, 1, 0), 0.4)
+		await tw.finished
+		if is_instance_valid(self):
+			visible = false
 
 func _physics_process(delta: float) -> void:
-	if _triggered:
+	if _triggered or not _visible_to_sanity:
 		return
 	var player := get_tree().get_first_node_in_group("player")
 	if player == null:
@@ -43,14 +76,15 @@ func _physics_process(delta: float) -> void:
 	if to_player.length() >= chase_range:
 		return
 
-	# El fantasma flota hacia el jugador pero las paredes lo frenan.
-	var dir := to_player.normalized()
-	$RayCast2D.target_position = dir * 32.0
-	$RayCast2D.force_raycast_update()
-	if $RayCast2D.is_colliding():
-		return
-
-	global_position += dir * chase_speed * delta
+	# En la oscuridad los enemigos son más rápidos y te detectan antes.
+	var dark_mult := 1.0 + (1.0 - float(GameState.effective_light()) / 100.0) * 0.8
+	if to_player.length() < chase_range * dark_mult * 0.6:
+		var dir := to_player.normalized()
+		$RayCast2D.target_position = dir * 32.0
+		$RayCast2D.force_raycast_update()
+		if $RayCast2D.is_colliding():
+			return
+		global_position += dir * chase_speed * dark_mult * delta
 
 func _on_body_entered(body: Node) -> void:
 	if _triggered:

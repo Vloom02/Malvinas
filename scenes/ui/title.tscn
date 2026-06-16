@@ -46,3 +46,10 @@ text = "Continuar"
 
 [node name="Salir" type="Button" parent="Center/VBox"]
 text = "Salir"
+
+[node name="ConsagracionLabel" type="Label" parent="Center/VBox"]
+visible = false
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+custom_minimum_size = Vector2(280, 160)

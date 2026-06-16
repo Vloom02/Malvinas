@@ -7,6 +7,7 @@ extends CharacterBody2D
 
 const STEP_DISTANCE: float = 64.0
 const SHEETS := "res://assets/sprites/lpc_soldado/standard"
+const FLASHLIGHT_BEAM := load("res://assets/sprites/flashlight_beam.png")
 const FRAME := 64
 ## Fila de cada dirección en los sheets LPC.
 const DIR_ROW := {"north": 0, "west": 1, "south": 2, "east": 3}
@@ -15,13 +16,21 @@ var _distance_walked: float = 0.0
 var _facing: String = "south"
 var _cur_anim: String = ""
 var sprite: AnimatedSprite2D
+var _flashlight_sprite: Sprite2D
 
 func _ready() -> void:
 	sprite = AnimatedSprite2D.new()
-	sprite.offset = Vector2(0, -20)   # pies sobre el piso
+	sprite.offset = Vector2(0, -20)
 	sprite.sprite_frames = _build_frames()
 	add_child(sprite)
 	_set_anim("idle", "south")
+	_flashlight_sprite = Sprite2D.new()
+	_flashlight_sprite.texture = FLASHLIGHT_BEAM
+	_flashlight_sprite.offset = Vector2(0, 8)
+	_flashlight_sprite.z_index = 1
+	_flashlight_sprite.visible = false
+	_flashlight_sprite.modulate = Color(1, 1, 0.7, 0.5)
+	add_child(_flashlight_sprite)
 
 ## Construye un SpriteFrames con walk_/idle_ por dirección desde los PNG LPC.
 func _build_frames() -> SpriteFrames:
@@ -72,6 +81,7 @@ func _physics_process(delta: float) -> void:
 		while _distance_walked >= STEP_DISTANCE:
 			_distance_walked -= STEP_DISTANCE
 			GameState.spend_step()
+			_spawn_blood_trail()
 
 func _update_animation(direction: Vector2) -> void:
 	var anim := "idle"
@@ -82,6 +92,18 @@ func _update_animation(direction: Vector2) -> void:
 		else:
 			_facing = "south" if direction.y > 0 else "north"
 	_set_anim(anim, _facing)
+	_update_flashlight()
+
+func _update_flashlight() -> void:
+	var on := GameState.linterna_on and GameState.light_battery > 0
+	_flashlight_sprite.visible = on
+	if not on:
+		return
+	match _facing:
+		"south": _flashlight_sprite.rotation = 0.0
+		"north": _flashlight_sprite.rotation = PI
+		"east": _flashlight_sprite.rotation = PI / 2.0
+		"west": _flashlight_sprite.rotation = -PI / 2.0
 
 func _set_anim(anim: String, dir: String) -> void:
 	var key := anim + "_" + dir
@@ -101,6 +123,23 @@ func _reflect_body() -> void:
 		1.0 - blueness - sickly * 0.3,
 		1.0 - redness - blueness * 0.3,
 		1.0 - redness - sickly)
+
+func _spawn_blood_trail() -> void:
+	if GameState.bleeding <= 0:
+		return
+	var drop := ColorRect.new()
+	drop.size = Vector2(randf_range(2.0, 5.0), randf_range(2.0, 5.0))
+	drop.color = Color(0.35, 0.02, 0.02, randf_range(0.4, 0.7))
+	drop.position = global_position + Vector2(randf_range(-6.0, 6.0), randf_range(-6.0, 6.0)) - drop.size * 0.5
+	drop.z_index = -1
+	var parent := get_parent()
+	if parent != null:
+		parent.add_child(drop)
+		var tw := create_tween().set_delay(randf_range(8.0, 16.0))
+		tw.tween_method(func(a: float): drop.modulate.a = a, drop.modulate.a, 0.0, 2.0)
+		await tw.finished
+		if is_instance_valid(drop):
+			drop.queue_free()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("roll_dice"):
