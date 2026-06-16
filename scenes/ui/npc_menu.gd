@@ -86,7 +86,7 @@ func _do_rest() -> void:
 	_info("Te tirás a dormir un rato. Recomponés el cuerpo... pero el hambre aprieta\ny algo, afuera, se acerca.")
 
 func _do_talk() -> void:
-	close()
+	visible = false
 	var data := load("res://data/dialogue/%s.tres" % _npc_name.to_lower()) as DataDialogue
 	if data != null:
 		Dialogue.play_data(data)

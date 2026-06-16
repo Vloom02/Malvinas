@@ -19,17 +19,20 @@ class_name Door
 @export var force_success_msg: String = "Forzás la puerta. Los goznes chillan pero cede."
 
 var _used: bool = false
+var _opening: bool = false
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 
 func _on_body_entered(body: Node) -> void:
-	if _used:
+	if _used or _opening:
 		return
 	if not body.is_in_group("player") or target_scene == "":
 		return
 	if _is_blocked():
+		_opening = true
 		_try_open()
+		_opening = false
 		return
 	_used = true
 	Transition.change(target_scene, target_spawn)

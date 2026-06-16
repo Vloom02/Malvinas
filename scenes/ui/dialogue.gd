@@ -44,6 +44,8 @@ func ask(text: String, options: Array) -> void:
 func play_data(data: DataDialogue) -> void:
 	if data == null:
 		return
+	_queue.clear()
+	_active = false
 	_choosing = true
 	visible = true
 	get_tree().paused = true
@@ -91,6 +93,8 @@ func _on_data_choice(next_path: String, set_flag: String, journal: String, sanit
 		var next := load(next_path) as DataDialogue
 		if next != null:
 			play_data(next)
+			return
+	finished.emit()
 
 func _on_choice(index: int) -> void:
 	_choosing = false

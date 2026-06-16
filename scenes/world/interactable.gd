@@ -58,7 +58,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if sanity_cost > 0:
 			var r := GameState.sanity_save(14, sanity_cost)
 			if r["success"]:
-				text += "\n\nTe horroriza, pero mantecés la cordura."
+				text += "\n\nTe horroriza, pero mantenés la cordura."
 			else:
 				text += "\n\n(Algo se quiebra en tu mente. -%d cordura.)" % sanity_cost
 		if gives_item != null and not _item_taken:
