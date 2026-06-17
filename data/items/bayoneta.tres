@@ -17,5 +17,6 @@ one_handed = true
 weight = 1
 attack_text = "Empalás a %s con la bayoneta."
 find_text = "Una bayoneta oxidada clavada en un saco de arena."
+variance = 2
 status_effect = "bleed"
 status_chance = 0.7

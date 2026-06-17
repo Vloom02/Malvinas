@@ -17,5 +17,6 @@ one_handed = true
 weight = 1
 attack_text = "Clavás el cuchillo en %s."
 find_text = "Un cuchillo de combate enterrado en la arena."
+variance = 2
 status_effect = "bleed"
 status_chance = 0.6

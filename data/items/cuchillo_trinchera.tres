@@ -12,5 +12,6 @@ pulse_mod = 1
 weapon_type = "cuchillo"
 one_handed = true
 weight = 1
+variance = 2
 attack_text = "Clavás el cuchillo en %s."
 find_text = "Encontrás un cuchillo clavado en una tabla."

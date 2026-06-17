@@ -37,3 +37,7 @@ class_name WeaponData
 @export var status_effect: String = ""
 ## Probabilidad de aplicar el efecto (0.0 a 1.0).
 @export var status_chance: float = 0.0
+
+## Varianza de daño: el daño real varía ±variance.
+## 0 = daño fijo, 2 = ±2, 5 = ±5, 10 = ±10, etc.
+@export var variance: int = 0

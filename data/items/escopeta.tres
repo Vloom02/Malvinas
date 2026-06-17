@@ -17,5 +17,6 @@ one_handed = false
 weight = 3
 attack_text = "Descargás la escopeta en %s a quemarropa."
 find_text = "Una escopeta de corredera entre los escombros, con pocas balas."
+variance = 5
 status_effect = "bleed"
 status_chance = 0.4

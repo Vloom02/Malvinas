@@ -48,10 +48,16 @@ var skill_mods: Dictionary = {
 var bonus_hp: int = 0  ## HP máximo bonus por libros.
 
 ## Devuelve el daño actual del jugador (base + arma + mods).
-func get_player_damage() -> int:
+## Si roll_variance = true, aplica ±variance del arma al resultado.
+func get_player_damage(roll_variance: bool = false) -> int:
 	var dmg: int = _base_damage + int(skill_mods.get("damage", 0))
+	var var_range: int = 0
 	if equipped_weapon != null:
 		dmg = equipped_weapon.damage + int(skill_mods.get("damage", 0))
+		var_range = equipped_weapon.variance
+	if roll_variance and var_range > 0:
+		dmg += randi_range(-var_range, var_range)
+		dmg = maxi(1, dmg)
 	return dmg
 
 ## Devuelve mod de pulso actual (arma + skills).
