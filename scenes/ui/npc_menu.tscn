@@ -14,26 +14,31 @@ color = Color(0, 0, 0, 0.55)
 
 [node name="Panel" type="Panel" parent="."]
 offset_left = 150.0
-offset_top = 46.0
+offset_top = 40.0
 offset_right = 490.0
-offset_bottom = 314.0
+offset_bottom = 320.0
 
 [node name="Title" type="Label" parent="Panel"]
-offset_left = 12.0
+offset_left = 14.0
 offset_top = 8.0
-offset_right = 328.0
-offset_bottom = 30.0
+offset_right = 326.0
+offset_bottom = 32.0
 text = "Sargento"
 
-[node name="List" type="VBoxContainer" parent="Panel"]
-offset_left = 12.0
+[node name="Scroll" type="ScrollContainer" parent="Panel"]
+offset_left = 14.0
 offset_top = 38.0
-offset_right = 328.0
-offset_bottom = 200.0
+offset_right = 326.0
+offset_bottom = 198.0
+horizontal_scroll_mode = 0
+
+[node name="List" type="VBoxContainer" parent="Panel/Scroll"]
+custom_minimum_size = Vector2(298, 0)
+theme_override_constants/separation = 4
 
 [node name="Info" type="Label" parent="Panel"]
-offset_left = 12.0
+offset_left = 14.0
 offset_top = 206.0
-offset_right = 328.0
-offset_bottom = 256.0
+offset_right = 326.0
+offset_bottom = 272.0
 autowrap_mode = 2

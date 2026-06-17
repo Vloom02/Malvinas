@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CompanionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/companion_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "cabo_pascual"
+display_name = "Cabo Pascual"
+description = "Un soldado delgado con los ojos hundidos. Fuma cigarrillos de papel y habla poco. Sobrevivió solo en las trincheras más de una semana."
+hp = 65
+hp_max = 65
+attack = 9
+defense = 2
+heal_power = 0
+recruit_text = "¿Te parezco alguien que confía en extraños, soldado?"
+death_text = "Al menos... no me morí solo..."
+recruit_flag = "pascual_trust"
+recruited_flag = "recruited_cabo_pascual"
+can_heal = false
+can_scout = true
+can_force = false

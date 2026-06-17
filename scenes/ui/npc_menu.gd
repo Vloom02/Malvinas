@@ -4,7 +4,7 @@ extends CanvasLayer
 ## Pausa el juego mientras está abierto; se cierra con Esc o "Irte".
 
 @onready var title: Label = $Panel/Title
-@onready var list: VBoxContainer = $Panel/List
+@onready var list: VBoxContainer = $Panel/Scroll/List
 @onready var info: Label = $Panel/Info
 
 var _npc_name: String = "Sargento"
@@ -46,11 +46,16 @@ func _show_shop() -> void:
 func _set_options(opts: Array) -> void:
 	for c in list.get_children():
 		c.queue_free()
+	var first: Button = null
 	for o in opts:
 		var b := Button.new()
 		b.text = o[0]
 		b.pressed.connect(o[1])
 		list.add_child(b)
+		if first == null:
+			first = b
+	if first != null:
+		first.call_deferred("grab_focus")
 
 func _info(msg: String) -> void:
 	info.text = "%s\n\nCigarrillos: %d" % [msg, GameState.money]
@@ -81,7 +86,7 @@ func _buy(item: ItemData) -> void:
 func _do_rest() -> void:
 	GameState.player_hp += 30
 	GameState.cold = 0
-	GameState.hunger = maxi(0, GameState.hunger - 12)
+	GameState.hunger = maxi(5, GameState.hunger - 12)
 	GameState.sanity = mini(GameState.SANITY_MAX, GameState.sanity + 8)
 	GameState.advance_danger(1)   # mientras dormís, el peligro avanza
 	GameState.body_changed.emit()

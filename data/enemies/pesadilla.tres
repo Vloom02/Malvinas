@@ -1,26 +1,25 @@
-[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://data/enemy_data.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/sprites/enemies/espectro_combat.png" id="2"]
 
 [resource]
 script = ExtResource("1")
-sprite = ExtResource("2")
 display_name = "Pesadilla"
 body_parts = {
-"brazo_der": 14,
-"brazo_izq": 14,
-"cabeza": 18,
-"pierna_der": 12,
-"pierna_izq": 12,
-"torso": 35
+"cabeza": 20,
+"torso": 100,
+"brazo_izq": 20,
+"brazo_der": 20,
+"pierna_izq": 20,
+"pierna_der": 20
 }
-attack = 10
-defense = 1
-loot_table = Array[String]([])
+attack = 14
+defense = 3
+loot_table = ["diente", "carne_podrida"]
 is_boss = false
-power_name = ""
-power_damage = 0
-power_dc = 0
-power_chance = 0.0
-reward = 0
+reward = 5
+ai_normal = "attack"
+ai_hurt = "whisper"
+ai_desperate = "distort"
+ai_chance_hurt = 0.3
+ai_chance_desperate = 0.6

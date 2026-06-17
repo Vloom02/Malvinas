@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = "alcohol"
 display_name = "Alcohol"
-description = "Alcohol de quemar. Sirve para prender fuego o desinfectar."
-effect = "warm"
+description = "Alcohol de quemar. Calienta el cuerpo y calma los nervios."
+effect = "alcohol"
 amount = 20
 price = 4

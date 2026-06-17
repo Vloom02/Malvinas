@@ -32,5 +32,11 @@ theme_override_constants/separation = 10
 [node name="Reanudar" type="Button" parent="Center/VBox"]
 text = "Reanudar"
 
+[node name="Menu" type="Button" parent="Center/VBox"]
+text = "Menú (Estado/Equipar/Inventario)"
+
+[node name="Opciones" type="Button" parent="Center/VBox"]
+text = "Opciones"
+
 [node name="Titulo" type="Button" parent="Center/VBox"]
 text = "Salir al título"

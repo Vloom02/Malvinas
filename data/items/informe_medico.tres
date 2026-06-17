@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillBook" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/skill_book.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "informe_medico"
+display_name = "Informe médico de campaña"
+description = "Un informe sobre primeros auxilios en combate. Aprendés a vendar mejor."
+skill_type = 5
+skill_value = 10
+read_text = "Leés el informe médico. Aprendés a curar heridas propias con más efectividad."
+read_flag = "read_informe_medico"

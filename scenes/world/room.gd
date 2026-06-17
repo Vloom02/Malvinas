@@ -9,7 +9,13 @@ extends Node2D
 ## DC para notar la emboscada antes de que ocurra (0 = sin chance de evitarla).
 @export var stealth_dc: int = 0
 
+## Decoraciones que NO bloquean el paso (pasto, arbustos, cráteres, charcos):
+## se las reconoce por el prefijo del nombre del nodo.
+const WALKABLE_DECALS := ["Tussock", "Gorse", "Crater", "Charco", "Pasto"]
+
 func _ready() -> void:
+	_add_prop_collisions()
+
 	if GameState.next_spawn != "":
 		var spawn := find_child(GameState.next_spawn, true, false)
 		var player := get_tree().get_first_node_in_group("player")
@@ -22,6 +28,40 @@ func _ready() -> void:
 			call_deferred("_stealth_check")
 		else:
 			call_deferred("_ambush")
+
+## Le da colisión a los props decorativos (sacos, barriles, cruces, rocas) que
+## están como Sprite2D plano dentro del nodo "Deco". Los props que ya son
+## prop.tscn (StaticBody2D) no se tocan. Los decals pisables se saltean.
+func _add_prop_collisions() -> void:
+	var deco := get_node_or_null("Deco")
+	if deco == null:
+		return
+	for child in deco.get_children():
+		if not (child is Sprite2D):
+			continue
+		var spr := child as Sprite2D
+		if spr.texture == null:
+			continue
+		var skip := false
+		for prefix in WALKABLE_DECALS:
+			if spr.name.begins_with(prefix):
+				skip = true
+				break
+		if skip:
+			continue
+		if spr.get_node_or_null("AutoCollision") != null:
+			continue
+		var tex_size := spr.texture.get_size()
+		var body := StaticBody2D.new()
+		body.name = "AutoCollision"
+		var col := CollisionShape2D.new()
+		var shape := RectangleShape2D.new()
+		# Cubre la base del prop (no todo el alto) para poder solaparte por arriba.
+		shape.size = Vector2(tex_size.x * 0.8, tex_size.y * 0.5)
+		col.shape = shape
+		col.position = Vector2(0, tex_size.y * 0.2)  # bajar a la base (sprite centrado)
+		body.add_child(col)
+		spr.add_child(body)
 
 func _stealth_check() -> void:
 	var r := Dice.check(2, stealth_dc)

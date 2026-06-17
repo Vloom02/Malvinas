@@ -17,63 +17,70 @@
 [ext_resource type="Texture2D" path="res://assets/props/fuel_drum.png" id="15"]
 [ext_resource type="Texture2D" path="res://assets/props/grave_cross.png" id="16"]
 [ext_resource type="Texture2D" path="res://assets/props/tussock.png" id="17"]
+[ext_resource type="PackedScene" path="res://scenes/world/npc_recruit.tscn" id="18"]
+[ext_resource type="PackedScene" path="res://scenes/world/cofre.tscn" id="19"]
+[ext_resource type="Resource" path="res://data/items/fal_m1982.tres" id="20"]
+[ext_resource type="Resource" path="res://data/items/manual_asalto.tres" id="21"]
+[ext_resource type="Texture2D" path="res://assets/sprites/sargento/rotations/south.png" id="22"]
 
 [sub_resource type="RectangleShape2D" id="WallH"]
-size = Vector2(640, 16)
+size = Vector2(1280, 16)
 
 [sub_resource type="RectangleShape2D" id="WallV"]
-size = Vector2(16, 360)
+size = Vector2(16, 720)
 
 [node name="Trinchera" type="Node2D"]
 script = ExtResource("12")
 
 [node name="Backdrop" type="ColorRect" parent="."]
-offset_right = 640.0
-offset_bottom = 360.0
+offset_right = 1280.0
+offset_bottom = 720.0
 color = Color(0.08, 0.08, 0.09, 1)
 
 [node name="Ground" type="TileMapLayer" parent="."]
 tile_set = ExtResource("3")
 script = ExtResource("2")
+cols = 40
+rows = 22
 
 [node name="WallTop" type="ColorRect" parent="."]
-offset_right = 640.0
+offset_right = 1280.0
 offset_bottom = 16.0
 color = Color(0.2, 0.19, 0.17, 1)
 
 [node name="WallBottom" type="ColorRect" parent="."]
-offset_top = 344.0
-offset_right = 640.0
-offset_bottom = 360.0
+offset_top = 704.0
+offset_right = 1280.0
+offset_bottom = 720.0
 color = Color(0.2, 0.19, 0.17, 1)
 
 [node name="WallLeft" type="ColorRect" parent="."]
 offset_right = 16.0
-offset_bottom = 360.0
+offset_bottom = 720.0
 color = Color(0.2, 0.19, 0.17, 1)
 
 [node name="WallRight" type="ColorRect" parent="."]
-offset_left = 624.0
-offset_right = 640.0
-offset_bottom = 360.0
+offset_left = 1264.0
+offset_right = 1280.0
+offset_bottom = 720.0
 color = Color(0.2, 0.19, 0.17, 1)
 
 [node name="Walls" type="StaticBody2D" parent="."]
 
 [node name="ColTop" type="CollisionShape2D" parent="Walls"]
-position = Vector2(320, 8)
+position = Vector2(640, 8)
 shape = SubResource("WallH")
 
 [node name="ColBottom" type="CollisionShape2D" parent="Walls"]
-position = Vector2(320, 352)
+position = Vector2(640, 712)
 shape = SubResource("WallH")
 
 [node name="ColLeft" type="CollisionShape2D" parent="Walls"]
-position = Vector2(8, 180)
+position = Vector2(8, 360)
 shape = SubResource("WallV")
 
 [node name="ColRight" type="CollisionShape2D" parent="Walls"]
-position = Vector2(632, 180)
+position = Vector2(1272, 360)
 shape = SubResource("WallV")
 
 [node name="Deco" type="Node2D" parent="."]
@@ -130,6 +137,18 @@ position = Vector2(360, 300)
 position = Vector2(600, 130)
 target_scene = "res://scenes/maps/nivel1_campo.tscn"
 target_spawn = "Entrada"
+
+[node name="CaboPascual" parent="." instance=ExtResource("18")]
+position = Vector2(300, 200)
+companion_path = "res://data/companions/cabo_pascual.tres"
+label_text = "Cabo Pascual"
+sprite_texture = ExtResource("22")
+dialogue_path = "res://data/dialogue/pascual_intro.tres"
+
+[node name="CofreTrinchera" parent="." instance=ExtResource("19")]
+position = Vector2(480, 260)
+items = [ExtResource("20"), ExtResource("21")]
+pickup_id = "cofre_trinchera"
 
 [node name="Player" parent="." instance=ExtResource("1")]
 position = Vector2(110, 290)

@@ -49,7 +49,7 @@ func _try_open() -> void:
 		Dialogue.ask(locked_message, ["Forzar la puerta (d20)", "Dejarla"])
 		var choice: int = await Dialogue.chosen
 		if choice == 0:
-			var mod := 2 - GameState.broken_arms() * 2
+			var mod := GameState.get_force_mod()
 			var r := Dice.check(mod, force_dc)
 			var text := "Forcejeás con la puerta...\n[d20 %d+%d=%d vs %d]" % [r["die"], mod, r["total"], force_dc]
 			if r["success"]:
@@ -62,6 +62,6 @@ func _try_open() -> void:
 				if Dice.chance(0.3):
 					GameState.apply_bleeding(1)
 				Dialogue.say(text)
-			return
+		return
 	else:
 		Dialogue.say(locked_message)

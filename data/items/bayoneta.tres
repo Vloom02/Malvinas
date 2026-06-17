@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "bayoneta"
+display_name = "Bayoneta"
+description = "Bayoneta desmontada de un FAL. Larga y afilada, hecha para perforar."
+damage = 15
+pulse_mod = 2
+dodge_mod = 0
+force_mod = 0
+perception_mod = 0
+weapon_type = "cuchillo"
+one_handed = true
+weight = 1
+attack_text = "Empalás a %s con la bayoneta."
+find_text = "Una bayoneta oxidada clavada en un saco de arena."
+status_effect = "bleed"
+status_chance = 0.7

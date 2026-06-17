@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CompanionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/companion_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "medico_rodriguez"
+display_name = "Médico Rodríguez"
+description = "Un enfermero de campo que todavía cree que puede salvar vidas. Sabe de primeros auxilios."
+hp = 50
+hp_max = 50
+attack = 5
+defense = 1
+heal_power = 25
+recruit_text = "Déjame acompañarte. Puedo curarte si te lastiman."
+death_text = "Hice lo que pude..."
+recruit_flag = ""
+recruited_flag = "recruited_medico_rodriguez"
+can_heal = true
+can_scout = false
+can_force = false

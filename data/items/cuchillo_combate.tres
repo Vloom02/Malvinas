@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "cuchillo_combate"
+display_name = "Cuchillo de combate"
+description = "Cuchillo militar de hoja corta. Diseñado para el combate cuerpo a cuerpo."
+damage = 14
+pulse_mod = 1
+dodge_mod = 0
+force_mod = 0
+perception_mod = 0
+weapon_type = "cuchillo"
+one_handed = true
+weight = 1
+attack_text = "Clavás el cuchillo en %s."
+find_text = "Un cuchillo de combate enterrado en la arena."
+status_effect = "bleed"
+status_chance = 0.6

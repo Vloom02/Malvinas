@@ -1,23 +1,29 @@
-[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://data/enemy_data.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/sprites/enemies/cosa_combat.png" id="2"]
 
 [resource]
 script = ExtResource("1")
-sprite = ExtResource("2")
 display_name = "La Cosa sin Rostro"
 body_parts = {
 "cabeza": 30,
-"tentaculo_der": 20,
-"tentaculo_izq": 20,
-"torso": 50
+"torso": 120,
+"brazo_izq": 20,
+"brazo_der": 20,
+"pierna_izq": 20,
+"pierna_der": 20
 }
 attack = 16
-defense = 2
-loot_table = Array[String](["diente"])
+defense = 4
+loot_table = []
 is_boss = true
-power_name = "Aullido devorador"
-power_damage = 26
-power_dc = 13
-power_chance = 0.5
+power_name = "Abrazo del vacío"
+power_damage = 25
+power_dc = 14
+power_chance = 0.35
+reward = 0
+ai_normal = "power"
+ai_hurt = "power"
+ai_desperate = "power"
+ai_chance_hurt = 0.5
+ai_chance_desperate = 0.7

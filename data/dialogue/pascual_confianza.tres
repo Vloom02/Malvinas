@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="DataDialogue" format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/data_dialogue.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+text = "Exhala humo por la nariz.\n«¿La salida? Ja. Yo llevo tres días acá. Las sendas cambian de noche. Los que intentaron ir solos... no volvieron.»\nSe toma un momento.\n«¿Qué te hace distinto a ellos?»"
+options = [{
+"text": "Tengo que volver con los míos. No me puedo quedar acá.",
+"next_path": "",
+"set_flag": "pascual_trust",
+"journal_entry": "Le dije a Pascual que tengo gente que me espera. Algo se le suavizó en la cara.",
+"sanity_cost": 0
+}, {
+"text": "Si sobreviviste tres días, algo sabés. Yo también sé algo.",
+"next_path": "",
+"set_flag": "",
+"journal_entry": "",
+"sanity_cost": 0
+}]

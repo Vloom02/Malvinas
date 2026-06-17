@@ -13,10 +13,11 @@ extends Control
 @onready var enemy_sprite: TextureRect = $EnemySprite
 @onready var player_sprite: TextureRect = $PlayerSprite
 @onready var parts_list: VBoxContainer = $PartsList
-@onready var actions: VBoxContainer = $Actions
-@onready var log_label: Label = $Log
+@onready var actions: VBoxContainer = $ActionsPanel/ActionsScroll/Actions
+@onready var log_label: Label = $LogPanel/Log
 @onready var player_info: Label = $PlayerInfo
 @onready var madness_tint: ColorRect = $MadnessTint
+@onready var companion_info: Label = $CompanionInfo if has_node("CompanionInfo") else null
 
 const PLAYER_TEXTURE := preload("res://assets/sprites/conscripto/rotations/south.png")
 
@@ -29,10 +30,7 @@ const SFX_VICTORY := "res://assets/audio/victory.wav"
 const SFX_DEATH := "res://assets/audio/death.wav"
 const MUSIC_COMBAT := "res://assets/audio/combat.ogg"
 
-const PLAYER_DMG := 11
-const PULSE_MOD := 2
 const PULSE_DC := 11
-const DODGE_MOD := 3
 const WOUNDED_HP := 35
 
 var enemy: EnemyData
@@ -41,19 +39,42 @@ var part_labels: Dictionary = {}
 var is_player_turn: bool = true
 var combat_over: bool = false
 var _pending_dodge: bool = false
-var _power_cooldown: bool = false
 var _enemy_staggered: bool = false
 var _resolved: bool = false
 var _guard_active: bool = false
 var _enemy_destroyed_parts: Dictionary = {}
 var _enemy_skip_turn: bool = false
+var _enemy_stun_turns: int = 0
+var _enemy_bleed: int = 0
+var _enemy_burn: int = 0
+var _enemy_poison: int = 0
+var _enemy_max_hp: int = 0
+var _companion_turn_used: bool = false
+var _rest_position: Vector2 = Vector2.ZERO
+
+## Menú jerárquico (estilo RPG Maker / F&H): "main", "attack", "items", "companion".
+var _menu: String = "main"
+
+## --- Ataque especial con aviso (telegraph) ---
+## Cuando el enemigo "carga" un golpe fuerte, lo avisa este turno y lo descarga
+## el turno siguiente. _special_cd evita que lo spamee.
+var _enemy_charging: bool = false
+var _special_cd: int = 2
+const SPECIAL_CHANCE_COMMON := 0.25
+var _last_log_lines: Array[String] = []
+const LOG_MAX_LINES := 4
 
 func _ready() -> void:
 	var path := GameState.pending_enemy_path
 	if path == "":
 		path = "res://data/enemies/ghoul.tres"
-	enemy = load(path) as EnemyData
+	var loaded := load(path) as EnemyData
+	if loaded == null:
+		push_error("combat: no se pudo cargar enemigo: %s" % path)
+		loaded = load("res://data/enemies/ghoul.tres") as EnemyData
+	enemy = loaded.duplicate() as EnemyData
 	parts_hp = enemy.body_parts.duplicate()
+	_enemy_max_hp = _total_parts_hp()
 	# Modo Cruz: enemigos más duros
 	if GameState.game_mode == "cruz":
 		for part in parts_hp.keys():
@@ -71,6 +92,7 @@ func _ready() -> void:
 	_refresh_player_info()
 	_log("Te enfrentás a: %s." % enemy.display_name)
 
+	_rest_position = position
 	GameState.player_died.connect(_on_player_died)
 
 	if path.contains("madness"):
@@ -90,7 +112,7 @@ func _on_player_died() -> void:
 		_lose()
 
 func _begin_enemy_breathing() -> void:
-	var tw := create_tween().set_loops()
+	var tw: Tween = create_tween().set_loops()
 	tw.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tw.tween_method(func(v: float): enemy_sprite.scale = Vector2(v, v), 1.0, 1.03, 2.0)
 	tw.tween_method(func(v: float): enemy_sprite.scale = Vector2(v, v), 1.03, 1.0, 2.0)
@@ -100,20 +122,19 @@ func _style_ui() -> void:
 	var fnt := load(font_path) as FontFile
 	if fnt == null:
 		return
-	fnt.fixed_size = 16
-	var theme := Theme.new()
-	theme.set_default_font(fnt)
-	theme.set_font("font", "Label", fnt)
-	theme.set_font("font", "Button", fnt)
-	theme.set_font_size("font_size", "Label", 14)
-	theme.set_font_size("font_size", "Button", 18)
-	theme.set_color("font_color", "Label", Color(0.75, 0.7, 0.65))
-	theme.set_color("font_color", "Button", Color(0.8, 0.75, 0.7))
-	theme.set_color("font_hover_color", "Button", Color(1.0, 0.9, 0.8))
-	theme.set_stylebox("panel", "Panel", null)
-	theme.set_constant("h_separation", "Button", 4)
+	var combat_theme := Theme.new()
+	combat_theme.set_default_font(fnt)
+	combat_theme.set_font("font", "Label", fnt)
+	combat_theme.set_font("font", "Button", fnt)
+	combat_theme.set_font_size("font_size", "Label", 14)
+	combat_theme.set_font_size("font_size", "Button", 18)
+	combat_theme.set_color("font_color", "Label", Color(0.75, 0.7, 0.65))
+	combat_theme.set_color("font_color", "Button", Color(0.8, 0.75, 0.7))
+	combat_theme.set_color("font_hover_color", "Button", Color(1.0, 0.9, 0.8))
+	combat_theme.set_stylebox("panel", "Panel", null)
+	combat_theme.set_constant("h_separation", "Button", 4)
 	for c in [enemy_name_label, log_label, player_info, parts_list, actions]:
-		c.theme = theme
+		c.theme = combat_theme
 
 func _begin_madness() -> void:
 	_log("La cordura te abandona. Algo sin rostro se arrastra hacia vos.")
@@ -128,33 +149,183 @@ func _build_parts_display() -> void:
 		parts_list.add_child(l)
 		part_labels[part] = l
 
+## Compatibilidad: arranca el menú en la raíz.
 func _build_action_buttons() -> void:
+	_show_menu("main")
+
+## Empieza el turno del jugador: resetea el menú a la raíz.
+func _start_player_turn() -> void:
+	is_player_turn = true
+	_companion_turn_used = false
+	_show_menu("main")
+
+## Helper para agregar un botón de acción.
+func _add_action(text: String, cb: Callable) -> void:
+	var b := Button.new()
+	b.text = text
+	b.pressed.connect(cb)
+	actions.add_child(b)
+
+## Pone el foco en el primer botón de acción (para jugar con teclado).
+func _focus_first_action() -> void:
+	if actions.get_child_count() > 0:
+		var first := actions.get_child(0)
+		if first is Button:
+			(first as Button).call_deferred("grab_focus")
+
+## Dibuja el menú según el estado. Jerárquico: Pelear / Objetos / Huir.
+func _show_menu(menu: String) -> void:
+	_menu = menu
 	_clear_actions()
-	for part in parts_hp.keys():
-		var b := Button.new()
-		b.text = "Atacar %s" % part
-		b.pressed.connect(_on_attack_part.bind(part))
-		actions.add_child(b)
-	var risky := Button.new()
-	risky.text = "Ataque arriesgado (dados)"
-	risky.pressed.connect(_on_risky_attack)
-	actions.add_child(risky)
-	var heal := Button.new()
-	heal.text = "Vendarte"
-	heal.pressed.connect(_on_bandage)
-	actions.add_child(heal)
-	var guard := Button.new()
-	guard.text = "Guardia"
-	guard.pressed.connect(_on_guard)
-	actions.add_child(guard)
-	var flee := Button.new()
-	flee.text = "Huir (dado)"
-	flee.pressed.connect(_on_flee)
-	actions.add_child(flee)
+
+	# Parálisis: solo podés esperar.
+	if menu == "main" and GameState.paralysis > 0:
+		_add_action("Esperar (paralizado)", _on_paralyzed_wait)
+		_focus_first_action()
+		return
+
+	match menu:
+		"main":
+			_add_action("Pelear", _show_attack_menu)
+			_add_action("Objetos", _show_items_menu)
+			if GameState.companion != null:
+				_add_action("Compañero", _show_companion_menu)
+			_add_action("Huir", _on_flee)
+		"attack":
+			if GameState.blind > 0:
+				_log("No ves bien. Las tiradas tienen desventaja.")
+			for part in parts_hp.keys():
+				var estado := "" if parts_hp[part] > 0 else " (destruida)"
+				_add_action("Atacar %s%s" % [part, estado], _on_attack_part.bind(part))
+			_add_action("Ataque arriesgado (dados)", _on_risky_attack)
+			_add_action("Guardia", _on_guard)
+			_add_action("« Volver", _show_main_menu)
+		"items":
+			_add_action("Vendarte", _on_bandage)
+			for item in GameState.inventory.keys():
+				if not (item is ItemData):
+					continue
+				if item == GameState.ITEM_VENDA or item == GameState.ITEM_LINTERNA or item == GameState.ITEM_PILAS:
+					continue
+				var count: int = GameState.inventory[item]
+				_add_action("Usar %s x%d" % [item.display_name, count], _on_use_combat_item.bind(item))
+			_add_action("« Volver", _show_main_menu)
+		"companion":
+			if GameState.companion != null:
+				if GameState.companion.can_heal:
+					_add_action("%s cura" % GameState.companion.display_name, _on_companion_heal)
+				if GameState.companion.can_force:
+					_add_action("%s ayuda a golpear" % GameState.companion.display_name, _on_companion_attack)
+			_add_action("« Volver", _show_main_menu)
+
+	_focus_first_action()
+
+func _show_main_menu() -> void:
+	_show_menu("main")
+
+func _show_attack_menu() -> void:
+	_show_menu("attack")
+
+func _show_items_menu() -> void:
+	_show_menu("items")
+
+func _show_companion_menu() -> void:
+	_show_menu("companion")
 
 func _clear_actions() -> void:
 	for c in actions.get_children():
 		c.queue_free()
+
+## Usa un consumible en combate (cuesta el turno).
+func _on_use_combat_item(item: ItemData) -> void:
+	if combat_over or not is_player_turn or _pending_dodge:
+		return
+	# Verificar artillería antes de consumir.
+	if item.effect == "artillery" and GameState.artillery_used:
+		_log("Ya usaste artillería en esta zona. Las coordenadas no sirven.")
+		return
+	var ok := GameState.use_item(item)
+	if not ok:
+		_log("No podés usar %s ahora." % item.display_name)
+		return
+	is_player_turn = false
+	_log("Usás %s." % item.display_name)
+
+	match item.effect:
+		"grenade":
+			_log("¡La granada estalla en el enemigo!")
+			for part in parts_hp.keys():
+				if parts_hp[part] > 0:
+					var dmg := 15
+					if part in ["torso", "cabeza"]:
+						dmg = 20
+					parts_hp[part] = maxi(0, parts_hp[part] - dmg)
+					_update_part_label(part)
+					_log("%s recibe %d de daño por la metralla." % [part, dmg])
+			if _enemy_dead():
+				_win()
+				_refresh_player_info()
+				AudioManager.play_sfx(SFX_HIT, -6.0)
+				_shake(10.0, 0.5)
+				return
+		"c4":
+			_log("¡El C4 detona! Una explosión masiva sacude el área.")
+			var dmg := 50
+			if parts_hp.get("torso", 0) > 0:
+				parts_hp["torso"] = maxi(0, parts_hp["torso"] - dmg)
+				_update_part_label("torso")
+				_log("El torso recibe %d de daño." % dmg)
+			# Daño secundario a otras partes.
+			for part in parts_hp.keys():
+				if part != "torso" and parts_hp[part] > 0:
+					parts_hp[part] = maxi(0, parts_hp[part] - 15)
+					_update_part_label(part)
+			_enemy_burn += 5
+			_log("El enemigo arde en llamas.")
+			if _enemy_dead():
+				_win()
+				_refresh_player_info()
+				AudioManager.play_sfx(SFX_HIT, -6.0)
+				_shake(10.0, 0.5)
+				return
+		"claymore":
+			_log("¡La Claymore dispara una lluvia de metralla a las piernas!")
+			var dmg := 25
+			for p in ["pierna_izq", "pierna_der"]:
+				if parts_hp.get(p, 0) > 0:
+					parts_hp[p] = maxi(0, parts_hp[p] - dmg)
+					_update_part_label(p)
+					_log("%s recibe %d de daño." % [p, dmg])
+			_enemy_bleed += 4
+			_log("El enemigo sangra profusamente.")
+			if _enemy_dead():
+				_win()
+				_refresh_player_info()
+				AudioManager.play_sfx(SFX_HIT, -6.0)
+				_shake(8.0, 0.4)
+				return
+		"artillery":
+			GameState.artillery_used = true
+			_log("¡Llamás a la artillería! El cielo truena y el infierno cae sobre %s." % enemy.display_name)
+			for part in parts_hp.keys():
+				if parts_hp[part] > 0:
+					var dmg := 35
+					parts_hp[part] = maxi(0, parts_hp[part] - dmg)
+					_update_part_label(part)
+					_log("%s: -%d por metralla de artillería." % [part, dmg])
+			_enemy_stun_turns = maxi(_enemy_stun_turns, 2)
+			_enemy_burn += 5
+			if _enemy_dead():
+				_win()
+				_refresh_player_info()
+				AudioManager.play_sfx(SFX_HIT, -8.0)
+				_shake(12.0, 0.6)
+				AudioManager.play_sfx("res://assets/audio/explosion.wav", -4.0)
+				return
+
+	_refresh_player_info()
+	await get_tree().create_timer(0.8).timeout
+	_enemy_turn()
 
 const TARGETS := [
 	{"key": "cabeza", "name": "la cabeza"},
@@ -175,31 +346,67 @@ func _on_attack_part(part: String) -> void:
 		_log("%s ya está destruida." % part)
 		return
 
+	# Evasión de cabeza (30%).
+	if part == "cabeza" and Dice.chance(0.3):
+		is_player_turn = false
+		_companion_turn_used = false
+		_log("%s esquiva el ataque a la cabeza. ¡Es rápido!" % enemy.display_name)
+		await get_tree().create_timer(0.6).timeout
+		_enemy_turn()
+		return
+
 	is_player_turn = false
-	var dmg := PLAYER_DMG
+	_companion_turn_used = false
+	var dmg := GameState.get_player_damage()
+	var weapon := GameState.equipped_weapon
 
 	if _is_wounded():
-		var r: Dictionary = Dice.check(PULSE_MOD, PULSE_DC)
+		var r: Dictionary = Dice.check(GameState.get_pulse_mod(), PULSE_DC)
 		if r["fumble"]:
 			dmg = 0
 			_log("Te tiembla el pulso y errás del todo  [d20 %d]" % r["die"])
 		elif r["success"]:
 			if r["crit"]:
-				dmg = PLAYER_DMG * 2
+				dmg = GameState.get_player_damage() * 2
 				_log("¡Pulso de acero! (20 natural)")
 			else:
 				_log("Aguantás el pulso  [d20 %d+%d=%d vs %d]" % [
 					r["die"], r["modifier"], r["total"], PULSE_DC])
 		else:
-			dmg = int(PLAYER_DMG / 2.0)
+			dmg = int(GameState.get_player_damage() / 2.0)
 			_log("El brazo herido te falla, pegás flojo  [d20 %d+%d=%d vs %d]" % [
 				r["die"], r["modifier"], r["total"], PULSE_DC])
 
 	if dmg > 0:
 		parts_hp[part] = maxi(0, parts_hp[part] - dmg)
-		_log("Golpeás %s: %d de daño." % [part, dmg])
+		var atk_text := "Golpeás %s: %d de daño."
+		if weapon != null and weapon.attack_text != "":
+			atk_text = weapon.attack_text + " (%d de daño)"
+		_log(atk_text % [part, dmg])
 		AudioManager.play_sfx(SFX_PLAYER_ATTACK, -3.0)
 		_update_part_label(part)
+
+		# Aplicar efecto de estado del arma.
+		if weapon != null and weapon.status_effect != "" and weapon.status_chance > 0.0:
+			if Dice.chance(weapon.status_chance):
+				match weapon.status_effect:
+					"bleed":
+						_enemy_bleed += 3
+						_log("¡El arma abre una herida profunda! (Sangrado x3)")
+					"burn":
+						_enemy_burn += 5
+						_log("¡El impacto quema al enemigo! (Quemadura x5)")
+					"stun":
+						_enemy_stun_turns = maxi(_enemy_stun_turns, 1)
+						_log("¡El golpe aturde al enemigo!")
+					"poison":
+						_enemy_poison += 3
+						_log("¡Veneno entra en la herida! (Veneno x3)")
+
+		if dmg > 0 and Dice.chance(0.15):
+			GameState.apply_bleeding(1)
+			_log("La sangre salpica. También te manchás vos.")
+
 		if parts_hp[part] == 0:
 			_enemy_destroyed_parts[part] = true
 			_log("¡Destruiste %s!" % part)
@@ -249,32 +456,72 @@ func _on_bandage() -> void:
 	await get_tree().create_timer(0.6).timeout
 	_enemy_turn()
 
-func _enemy_turn() -> void:
-	if combat_over:
+func _on_paralyzed_wait() -> void:
+	if combat_over or not is_player_turn:
 		return
+	is_player_turn = false
+	_companion_turn_used = false
+	_log("Los músculos no responden. Perdés el turno.")
+	await get_tree().create_timer(0.6).timeout
+	_enemy_turn()
 
-	if _enemy_staggered:
-		_enemy_staggered = false
-		_log("%s se tambalea y pierde el turno." % enemy.display_name)
-		is_player_turn = true
-		return
+func _select_ai_action() -> String:
+	var ratio := _enemy_hp_ratio()
+	if ratio < 0.25 and Dice.chance(enemy.ai_chance_desperate):
+		return enemy.ai_desperate
+	if ratio < 0.5 and Dice.chance(enemy.ai_chance_hurt):
+		return enemy.ai_hurt
+	return enemy.ai_normal
 
-	if _enemy_skip_turn:
-		_enemy_skip_turn = false
-		_log("%s se arrastra sin poder alcanzarte." % enemy.display_name)
-		is_player_turn = true
-		return
+func _execute_ai_action(action: String) -> void:
+	match action:
+		"attack":
+			_execute_ai_attack()
+		"scream":
+			_log("%s emite un alarido que te perfora los oídos." % enemy.display_name)
+			GameState.sanity = maxi(0, GameState.sanity - 10)
+			GameState.apply_paralysis(1)
+			_log("El alarido te paraliza de miedo.")
+			_start_player_turn()
+		"embrace":
+			_log("%s se abalanza sobre vos en un abrazo mortal." % enemy.display_name)
+			var dmg := maxi(1, enemy.attack + 6 + GameState.danger)
+			dmg = maxi(1, int(dmg * GameState.get_damage_taken_mult()))
+			dmg = maxi(1, dmg - GameState.get_defense_mod())
+			_companion_take_hit(dmg)
+			GameState.apply_bleeding(2)
+			AudioManager.play_sfx(SFX_HIT, -2.0)
+			_log("Te aprieta: -%d de vida y sangrado." % dmg)
+			_shake(6.0, 0.3)
+			_refresh_player_info()
+			if GameState.player_hp <= 0:
+				_lose()
+			else:
+				_start_player_turn()
+		"power":
+			if _special_cd <= 0:
+				_enemy_charging = true
+				_special_cd = 3
+				_log("%s se prepara para un GOLPE FUERTE. ¡Anticipate!" % enemy.display_name)
+				_telegraph_flash()
+				_start_player_turn()
+			else:
+				_execute_ai_attack()
+		"rest":
+			var heal := 10 + (GameState.danger * 2)
+			for part in parts_hp.keys():
+				if parts_hp[part] > 0 and parts_hp[part] < enemy.body_parts[part]:
+					parts_hp[part] = mini(enemy.body_parts[part], parts_hp[part] + heal)
+				_update_part_label(part)
+			_log("%s se retira un momento y se recupera." % enemy.display_name)
+			_start_player_turn()
+		_:
+			_execute_ai_attack()
 
-	if enemy.is_boss and enemy.power_name != "" and not _power_cooldown and Dice.chance(enemy.power_chance):
-		_power_cooldown = true
-		_pending_dodge = true
-		_log("%s prepara «%s». ¡ESQUIVÁ!" % [enemy.display_name, enemy.power_name])
-		_show_dodge_action()
-		is_player_turn = true
-		return
-
-	_power_cooldown = false
+func _execute_ai_attack() -> void:
 	var dmg := maxi(1, enemy.attack + GameState.danger)
+	dmg = maxi(1, int(dmg * GameState.get_damage_taken_mult()))
+	dmg = maxi(1, dmg - GameState.get_defense_mod())
 	dmg = maxi(1, dmg + _enemy_damage_mod())
 	var t: Dictionary = TARGETS[randi() % TARGETS.size()]
 
@@ -283,11 +530,11 @@ func _enemy_turn() -> void:
 		_guard_active = false
 		_log("Bloqueás parte del golpe con la guardia.")
 
-	GameState.damage_player(dmg)
+	_companion_take_hit(dmg)
 	AudioManager.play_sfx(SFX_HIT, -2.0)
 	_log("%s te golpea en %s: -%d de vida." % [enemy.display_name, t["name"], dmg])
 	_shake(4.0, 0.25)
-	_spawn_blood(Vector2(randf_range(340, 440), randf_range(42, 142)))
+	_spawn_blood(Vector2(randf_range(470, 560), randf_range(50, 150)))
 
 	if GameState.body_parts_state.has(t["key"]) and Dice.chance(0.22):
 		if GameState.break_part(t["key"]):
@@ -295,81 +542,205 @@ func _enemy_turn() -> void:
 	elif Dice.chance(0.3):
 		GameState.apply_bleeding(1)
 		_log("¡Te abre una herida! Empezás a SANGRAR.")
+
+func _tick_enemy_status() -> void:
+	var status_log: Array[String] = []
+	if _enemy_bleed > 0:
+		var bleed_dmg := _enemy_bleed
+		# Aplicar a torso como daño directo
+		if parts_hp.get("torso", 0) > 0:
+			parts_hp["torso"] = maxi(0, parts_hp["torso"] - bleed_dmg)
+			_update_part_label("torso")
+		_enemy_bleed = maxi(0, _enemy_bleed - 1)
+		status_log.append("sangrado -%d" % bleed_dmg)
+	if _enemy_burn > 0:
+		var burn_dmg := _enemy_burn
+		var target := "torso"
+		for p in ["brazo_izq", "brazo_der", "pierna_izq", "pierna_der"]:
+			if parts_hp.get(p, 0) > 0:
+				target = p
+				break
+		if parts_hp.get(target, 0) > 0:
+			parts_hp[target] = maxi(0, parts_hp[target] - burn_dmg)
+			_update_part_label(target)
+		_enemy_burn = maxi(0, _enemy_burn - 1)
+		status_log.append("quemadura -%d" % burn_dmg)
+	if _enemy_poison > 0:
+		if parts_hp.get("torso", 0) > 0:
+			parts_hp["torso"] = maxi(0, parts_hp["torso"] - 2)
+			_update_part_label("torso")
+		_enemy_poison = maxi(0, _enemy_poison - 1)
+		status_log.append("veneno -2")
+	if _enemy_stun_turns > 0:
+		status_log.append("aturdido")
+	if not status_log.is_empty():
+		_log("[Estado enemigo: %s]" % ", ".join(status_log))
+
+func _enemy_turn() -> void:
+	if combat_over:
+		return
+
+	if _enemy_staggered:
+		_enemy_staggered = false
+		_log("%s se tambalea y pierde el turno." % enemy.display_name)
+		_tick_enemy_status()
+		if _enemy_dead():
+			_win()
+			return
+		_start_player_turn()
+		return
+
+	if _enemy_skip_turn:
+		_enemy_skip_turn = false
+		_log("%s se arrastra sin poder alcanzarte." % enemy.display_name)
+		_tick_enemy_status()
+		if _enemy_dead():
+			_win()
+			return
+		_start_player_turn()
+		return
+
+	# Aturdido: no hace nada.
+	if _enemy_stun_turns > 0:
+		_enemy_stun_turns -= 1
+		_log("%s está aturdido y no puede moverse." % enemy.display_name)
+		_tick_enemy_status()
+		if _enemy_dead():
+			_win()
+			return
+		_start_player_turn()
+		return
+
+	# Tic de estados del enemigo.
+	_tick_enemy_status()
+	if _enemy_dead():
+		_win()
+		return
+
+	# Si venía cargando un golpe fuerte, lo descarga AHORA.
+	if _enemy_charging:
+		_execute_special()
+		return
+
+	# Selección de IA según HP.
+	var ai_action := _select_ai_action()
+
+	# ¿Empieza a cargar un golpe especial? Solo si la IA no lo hizo ya.
+	if _special_cd <= 0 and Dice.chance(_special_chance()) and ai_action != "power":
+		_enemy_charging = true
+		_special_cd = 3
+		_log("%s se prepara para un GOLPE FUERTE. ¡Anticipate! (Guardia o curarte)" % enemy.display_name)
+		_telegraph_flash()
+		_start_player_turn()
+		return
+	if _special_cd > 0:
+		_special_cd -= 1
+
+	_execute_ai_action(ai_action)
 	_refresh_player_info()
 	if GameState.player_hp <= 0:
 		_lose()
 		return
-	is_player_turn = true
+	_start_player_turn()
 
-func _show_dodge_action() -> void:
-	_clear_actions()
-	var b := Button.new()
-	b.text = "Esquivar  (tirar dado)"
-	b.pressed.connect(_on_dodge)
-	actions.add_child(b)
+## Probabilidad de que el enemigo cargue un golpe especial este turno.
+func _special_chance() -> float:
+	if enemy.is_boss and enemy.power_chance > 0.0:
+		return enemy.power_chance
+	return SPECIAL_CHANCE_COMMON
 
-func _on_dodge() -> void:
-	if combat_over or not _pending_dodge:
-		return
-	_pending_dodge = false
-	var r := Dice.check(DODGE_MOD, enemy.power_dc)
+## Tiñe al enemigo de rojo un instante para avisar que está cargando.
+func _telegraph_flash() -> void:
+	enemy_sprite.modulate = Color(1, 1, 1, 1)
+	var tw := create_tween().set_loops(3)
+	tw.tween_property(enemy_sprite, "modulate", Color(1.6, 0.5, 0.5, 1), 0.25)
+	tw.tween_property(enemy_sprite, "modulate", Color(1, 1, 1, 1), 0.25)
+
+## Descarga el golpe fuerte cargado el turno anterior. Podés esquivarlo (dado)
+## o aguantarlo con guardia.
+func _execute_special() -> void:
+	_enemy_charging = false
+	enemy_sprite.modulate = Color(1, 1, 1, 1)
+	var pname: String = enemy.power_name if (enemy.is_boss and enemy.power_name != "") else "Embestida brutal"
+	var dmg := maxi(1, (enemy.attack + GameState.danger) * 2)
+	dmg = maxi(1, int(dmg * GameState.get_damage_taken_mult()))
+	dmg = maxi(1, dmg - GameState.get_defense_mod())
+	if enemy.is_boss and enemy.power_damage > 0:
+		dmg = maxi(dmg, enemy.power_damage)
+	var dc: int = enemy.power_dc if (enemy.is_boss and enemy.power_dc > 0) else 12
+	var r := Dice.check(GameState.get_dodge_mod(), dc)
 
 	if r["success"]:
 		AudioManager.play_sfx(SFX_DODGE, -4.0)
-		if r["crit"]:
-			_log("¡Esquive perfecto! (20 natural) Ni te roza.")
-		else:
-			_log("¡Esquivás «%s»!  [d20 %d+%d=%d vs %d]" % [
-				enemy.power_name, r["die"], r["modifier"], r["total"], enemy.power_dc])
+		_log("¡Esquivás «%s»!  [d20 %d+%d=%d vs %d]" % [
+			pname, r["die"], r["modifier"], r["total"], dc])
 	else:
-		var dmg := maxi(1, enemy.power_damage)
-		GameState.damage_player(dmg)
+		if _guard_active:
+			dmg = maxi(1, int(dmg * 0.5))
+			_guard_active = false
+			_log("Aguantás «%s» con la guardia." % pname)
+		_companion_take_hit(dmg)
 		GameState.apply_bleeding(1)
 		AudioManager.play_sfx(SFX_HIT, -2.0)
-		_log("«%s» te da de lleno: -%d de vida y te abre una herida  [d20 %d+%d=%d vs %d]" % [
-			enemy.power_name, dmg, r["die"], r["modifier"], r["total"], enemy.power_dc])
-		_refresh_player_info()
-		_shake(6.0, 0.35)
-		_spawn_blood(Vector2(randf_range(360, 440), randf_range(42, 142)))
+		_log("«%s» te revienta: -%d de vida y herida abierta.  [d20 %d+%d=%d vs %d]" % [
+			pname, dmg, r["die"], r["modifier"], r["total"], dc])
+		_shake(8.0, 0.4)
+		_spawn_blood(Vector2(randf_range(470, 560), randf_range(50, 150)))
 
-	_build_action_buttons()
+	_refresh_player_info()
 	if GameState.player_hp <= 0:
 		_lose()
 		return
-	await get_tree().create_timer(0.7).timeout
-	_enemy_turn()
+	_start_player_turn()
 
 func _on_risky_attack() -> void:
 	if combat_over or not is_player_turn or _pending_dodge:
 		return
 	is_player_turn = false
 
-	var v := Dice.versus(2, enemy.defense)
-	var text := "ATAQUE ARRIESGADO\n\nVos:  [ d20 %d + 2 = %d ]\n%s:  [ d20 %d + %d = %d ]\n\n" % [
-		v["player_die"], v["player_total"],
-		enemy.display_name, v["enemy_die"], enemy.defense, v["enemy_total"]]
+	var v := Dice.versus(GameState.get_pulse_mod(), enemy.defense)
+	_log("Arriesgado: vos [d20 %d+%d=%d] vs %s [%d+%d=%d]" % [
+		v["player_die"], GameState.get_pulse_mod(), v["player_total"],
+		enemy.display_name, v["enemy_die"], enemy.defense, v["enemy_total"]])
 
 	if v["player_wins"]:
 		var part := _strongest_part()
-		var dmg := PLAYER_DMG * 2
+		var dmg := GameState.get_player_damage() * 2
 		parts_hp[part] = maxi(0, parts_hp[part] - dmg)
 		_update_part_label(part)
-		text += "¡Ganás el intercambio! Golpe brutal a %s: %d de daño." % [part, dmg]
+		_log("¡Ganás! Golpe brutal a %s: %d de daño." % [part, dmg])
+		# Aplicar efecto del arma en risky attack.
+		var weapon := GameState.equipped_weapon
+		if weapon != null and weapon.status_effect != "" and Dice.chance(weapon.status_chance):
+			match weapon.status_effect:
+				"bleed":
+					_enemy_bleed += 5
+					_log("La herida es profunda y sangra copiosamente.")
+				"burn":
+					_enemy_burn += 5
+					_log("El impacto deja el cuerpo humeante.")
+				"stun":
+					_enemy_stun_turns = maxi(_enemy_stun_turns, 2)
+					_log("El enemigo queda aturdido por el golpe.")
+				"poison":
+					_enemy_poison += 5
+					_log("El veneno corre por las venas del enemigo.")
 		if parts_hp[part] == 0:
-			text += "\n¡Destruiste %s!" % part
+			_log("¡Destruiste %s!" % part)
 	elif v["tie"]:
-		text += "Empate: los golpes chocan, nadie cede."
+		_log("Empate: los golpes chocan, nadie cede.")
 	else:
-		var dmg := enemy.attack + 4
+		var dmg := maxi(1, enemy.attack + 4)
+		dmg = maxi(1, int(dmg * GameState.get_damage_taken_mult()))
+		dmg = maxi(1, dmg - GameState.get_defense_mod())
 		GameState.damage_player(dmg)
 		GameState.apply_bleeding(1)
-		text += "%s te lee el movimiento: -%d de vida y te abre una herida." % [enemy.display_name, dmg]
+		_log("%s te lee el movimiento: -%d y herida abierta." % [enemy.display_name, dmg])
 		_shake(5.0, 0.3)
-		_spawn_blood(Vector2(randf_range(360, 440), randf_range(42, 142)))
+		_spawn_blood(Vector2(randf_range(470, 560), randf_range(50, 150)))
 
-	_log(text)
-	Dialogue.say(text)
-	await Dialogue.finished
+	_refresh_player_info()
+	await get_tree().create_timer(0.8).timeout
 
 	if _enemy_dead():
 		_win()
@@ -383,18 +754,16 @@ func _on_flee() -> void:
 	if combat_over or not is_player_turn or _pending_dodge:
 		return
 	is_player_turn = false
-	var r := Dice.check(3, 12)
-	var text := "Intentás huir...\n[ d20 %d + 3 = %d ]  vs  12\n\n" % [r["die"], r["total"]]
+	var r := Dice.check(3 + GameState.get_force_mod(), 12)
+	_log("Intentás huir: [d20 %d+%d=%d] vs 12" % [r["die"], 3 + GameState.get_force_mod(), r["total"]])
 	if r["success"]:
 		combat_over = true
-		text += "¡Escapás! (%s sigue al acecho)" % enemy.display_name
-		Dialogue.say(text)
-		await Dialogue.finished
+		_log("¡Escapás! (%s sigue al acecho)" % enemy.display_name)
+		await get_tree().create_timer(0.9).timeout
 		GameState.flee_combat()
 	else:
-		text += "No llegás. %s te alcanza." % enemy.display_name
-		Dialogue.say(text)
-		await Dialogue.finished
+		_log("No llegás. %s te alcanza." % enemy.display_name)
+		await get_tree().create_timer(0.8).timeout
 		_enemy_turn()
 
 func _strongest_part() -> String:
@@ -409,8 +778,37 @@ func _strongest_part() -> String:
 func _update_part_label(part: String) -> void:
 	if parts_hp[part] <= 0:
 		part_labels[part].text = "%s: DESTRUIDA" % part
+		_apply_dismember_sprite(part)
 	else:
 		part_labels[part].text = "%s: %d" % [part, parts_hp[part]]
+
+## Cambia el sprite del enemigo al destruir un miembro, SI existe una variante
+## dibujada. Convención: <sprite_base>_<parte>.png en la misma carpeta.
+## Ej: soldado_combat.png + brazo_der → soldado_combat_brazo_der.png
+## Si no existe el archivo, no pasa nada (se queda el sprite actual).
+func _apply_dismember_sprite(part: String) -> void:
+	if enemy == null or enemy.sprite == null:
+		return
+	var base: String = enemy.sprite.resource_path
+	if not base.ends_with(".png"):
+		return
+	var variant := base.trim_suffix(".png") + "_" + part + ".png"
+	if ResourceLoader.exists(variant):
+		var tex := load(variant) as Texture2D
+		if tex != null:
+			enemy_sprite.texture = tex
+
+func _total_parts_hp() -> int:
+	var t := 0
+	for p in parts_hp.values():
+		t += p
+	return t
+
+func _enemy_hp_ratio() -> float:
+	var current := _total_parts_hp()
+	if _enemy_max_hp <= 0:
+		return 1.0
+	return float(current) / float(_enemy_max_hp)
 
 func _enemy_dead() -> bool:
 	return parts_hp.get("cabeza", 1) <= 0 or parts_hp.get("torso", 1) <= 0
@@ -419,20 +817,111 @@ func _refresh_player_info() -> void:
 	var s := "Tu vida: %d/%d" % [GameState.player_hp, GameState.PLAYER_HP_MAX]
 	if GameState.bleeding > 0:
 		s += "    (SANGRANDO x%d)" % GameState.bleeding
+	if GameState.poison > 0:
+		s += "    (VENENO x%d)" % GameState.poison
+	if GameState.paralysis > 0:
+		s += "    (PARÁLISIS)"
+	if GameState.blind > 0:
+		s += "    (CEGUERA)"
+	if GameState.concussion > 0:
+		s += "    (CONMOCIÓN)"
+	if GameState.shell_shock > 0:
+		s += "    (SHOCK DE BATALLA)"
+	if GameState.burns > 0:
+		s += "    (QUEMADURAS x%d)" % GameState.burns
+	if GameState.wound_infection > 0:
+		s += "    (INFECCIÓN)"
+	var enemigo_s := ""
+	if _enemy_bleed > 0:
+		enemigo_s += " Enemigo:[sangrado x%d]" % _enemy_bleed
+	if _enemy_burn > 0:
+		enemigo_s += "[quemadura x%d]" % _enemy_burn
+	if _enemy_poison > 0:
+		enemigo_s += "[veneno x%d]" % _enemy_poison
 	var roto: Array = []
 	for part in GameState.body_parts_state.keys():
 		if GameState.body_parts_state[part] == "roto":
 			roto.append(part)
 	if not roto.is_empty():
 		s += "\nRoto: " + ", ".join(roto)
+	if enemigo_s != "":
+		s += "\n" + enemigo_s
 	player_info.text = s
+	# Companion info.
+	if companion_info != null and GameState.companion != null:
+		companion_info.text = "%s: %d/%d HP" % [
+			GameState.companion.display_name, GameState.companion_hp, GameState.companion_hp_max]
+		companion_info.visible = true
+	elif companion_info != null:
+		companion_info.visible = false
 
 func _shake(intensity: float, duration: float) -> void:
-	var original := position
 	var offset := Vector2(randf_range(-intensity, intensity), randf_range(-intensity, intensity))
-	var tw := create_tween().set_trans(Tween.TRANS_QUAD)
-	tw.tween_property(self, "position", original + offset, duration * 0.5)
-	tw.tween_property(self, "position", original, duration * 0.5)
+	var tw: Tween = create_tween().set_trans(Tween.TRANS_QUAD)
+	tw.tween_property(self, "position", _rest_position + offset, duration * 0.5)
+	tw.tween_property(self, "position", _rest_position, duration * 0.5)
+
+# --- Acciones del companion ---
+
+func _on_companion_heal() -> void:
+	if combat_over or not is_player_turn or _pending_dodge or _companion_turn_used:
+		return
+	if GameState.companion == null or not GameState.companion.can_heal:
+		return
+	_companion_turn_used = true
+	var heal := GameState.companion.heal_power
+	if heal <= 0:
+		heal = 15
+	GameState.heal_companion(heal)
+	GameState.player_hp = mini(GameState.PLAYER_HP_MAX, GameState.player_hp + int(heal * 0.5))
+	_log("%s te cura. Vos: +%d, Él: +%d" % [GameState.companion.display_name, int(heal * 0.5), heal])
+	_refresh_player_info()
+	await get_tree().create_timer(0.6).timeout
+	_enemy_turn()
+
+func _on_companion_attack() -> void:
+	if combat_over or not is_player_turn or _pending_dodge or _companion_turn_used:
+		return
+	if GameState.companion == null:
+		return
+	_companion_turn_used = true
+	var dmg := GameState.companion.attack
+	var part := _strongest_part()
+	parts_hp[part] = maxi(0, parts_hp[part] - dmg)
+	_update_part_label(part)
+	_log("%s ataca %s: %d de daño." % [GameState.companion.display_name, part, dmg])
+	AudioManager.play_sfx(SFX_PLAYER_ATTACK, -3.0)
+	if parts_hp[part] == 0:
+		_enemy_destroyed_parts[part] = true
+		_log("¡%s destruye %s!" % [GameState.companion.display_name, part])
+		if part in ["pierna_izq", "pierna_der"]:
+			_enemy_skip_turn = true
+		elif part in ["brazo_izq", "brazo_der"]:
+			pass
+		else:
+			_enemy_staggered = true
+	if _enemy_dead():
+		_win()
+		return
+	_refresh_player_info()
+	await get_tree().create_timer(0.6).timeout
+	_enemy_turn()
+
+## El companion recibe daño en vez del jugador (si está presente).
+func _companion_take_hit(dmg: int) -> void:
+	if GameState.companion == null:
+		GameState.damage_player(dmg)
+		return
+	# 50% chance de que el companion absorba el golpe.
+	if Dice.chance(0.5):
+		var cname := GameState.companion.display_name
+		var died := GameState.damage_companion(dmg)
+		_log("%s recibe el golpe: -%d HP." % [cname, dmg])
+		if died:
+			_log("%s ha caído." % cname)
+			_build_action_buttons()
+	else:
+		GameState.damage_player(dmg)
 
 func _spawn_blood(at: Vector2) -> void:
 	var p := GPUParticles2D.new()
@@ -497,15 +986,20 @@ func _lose() -> void:
 func _log(msg: String) -> void:
 	if GameState.sanity < 25 and Dice.chance(0.4):
 		msg = _garble(msg)
-	log_label.text += msg + "\n"
+	# Mantener solo las últimas líneas para que la caja no se desborde.
+	_last_log_lines.append(msg)
+	while _last_log_lines.size() > LOG_MAX_LINES:
+		_last_log_lines.pop_front()
+	log_label.text = "\n".join(_last_log_lines)
 
 func _garble(s: String) -> String:
+	var garble_chars := "¡¿ãõñáéíóúàèìòùäëïöüâêîôû0123456789"
 	var result := ""
 	for c in s:
 		if Dice.chance(0.25):
 			result += "*"
 		elif Dice.chance(0.15):
-			result += char(randi_range(0x0410, 0x044F)) if randi() % 2 == 0 else "?"
+			result += garble_chars[randi() % garble_chars.length()]
 		else:
 			result += c
 	return result

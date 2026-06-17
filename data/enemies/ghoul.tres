@@ -1,26 +1,26 @@
-[gd_resource type="Resource" script_class="EnemyData" format=3 uid="uid://cle1cprg4y2yw"]
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
 
-[ext_resource type="Script" uid="uid://bfhdwmuykvt85" path="res://data/enemy_data.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/sprites/enemies/espectro_combat.png" id="2"]
+[ext_resource type="Script" path="res://data/enemy_data.gd" id="1"]
 
 [resource]
 script = ExtResource("1")
-sprite = ExtResource("2")
 display_name = "Espectro"
+sprite = ExtResource("2")
 body_parts = {
-"brazo_der": 18,
+"cabeza": 20,
+"torso": 80,
 "brazo_izq": 18,
-"cabeza": 22,
-"pierna_der": 16,
-"pierna_izq": 16,
-"torso": 45
+"brazo_der": 18,
+"pierna_izq": 18,
+"pierna_der": 18
 }
 attack = 12
 defense = 3
-loot_table = Array[String](["carne_podrida", "diente"])
+loot_table = ["carne_podrida", "diente"]
 is_boss = false
-power_name = ""
-power_damage = 0
-power_dc = 0
-power_chance = 0.0
 reward = 4
+ai_normal = "attack"
+ai_hurt = "scream"
+ai_desperate = "embrace"
+ai_chance_hurt = 0.3
+ai_chance_desperate = 0.6

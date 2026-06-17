@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "escopeta"
+display_name = "Escopeta de corredera"
+description = "Escopeta recortada. Devastadora a corta distancia pero lenta de recargar."
+damage = 25
+pulse_mod = -1
+dodge_mod = -1
+force_mod = 0
+perception_mod = 0
+weapon_type = "escopeta"
+one_handed = false
+weight = 3
+attack_text = "Descargás la escopeta en %s a quemarropa."
+find_text = "Una escopeta de corredera entre los escombros, con pocas balas."
+status_effect = "bleed"
+status_chance = 0.4

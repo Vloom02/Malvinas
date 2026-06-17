@@ -1,0 +1,106 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/game_menu.gd" id="1"]
+
+[node name="GameMenu" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1")
+
+[node name="Panel" type="Panel" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+mouse_filter = 2
+
+[node name="VBox" type="VBoxContainer" parent="Panel/Margin"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+mouse_filter = 2
+
+[node name="Tabs" type="HBoxContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="BtnStatus" type="Button" parent="Panel/Margin/VBox/Tabs"]
+layout_mode = 2
+text = "Estado"
+custom_minimum_size = Vector2(80, 0)
+
+[node name="BtnEquip" type="Button" parent="Panel/Margin/VBox/Tabs"]
+layout_mode = 2
+text = "Equipar"
+custom_minimum_size = Vector2(80, 0)
+
+[node name="BtnCompanion" type="Button" parent="Panel/Margin/VBox/Tabs"]
+layout_mode = 2
+text = "Compañero"
+custom_minimum_size = Vector2(80, 0)
+
+[node name="BtnSkills" type="Button" parent="Panel/Margin/VBox/Tabs"]
+layout_mode = 2
+text = "Habilidades"
+custom_minimum_size = Vector2(80, 0)
+
+[node name="BtnItems" type="Button" parent="Panel/Margin/VBox/Tabs"]
+layout_mode = 2
+text = "Objetos"
+custom_minimum_size = Vector2(80, 0)
+
+[node name="BtnClose" type="Button" parent="Panel/Margin/VBox/Tabs"]
+layout_mode = 2
+text = "Cerrar"
+custom_minimum_size = Vector2(80, 0)
+size_flags_horizontal = 10
+
+[node name="ContentScroll" type="ScrollContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+follow_focus = true
+
+[node name="Content" type="MarginContainer" parent="Panel/Margin/VBox/ContentScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_top = 8
+
+[node name="StatusPanel" type="VBoxContainer" parent="Panel/Margin/VBox/ContentScroll/Content"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 2
+
+[node name="EquipPanel" type="VBoxContainer" parent="Panel/Margin/VBox/ContentScroll/Content"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 2
+visible = false
+
+[node name="CompanionPanel" type="VBoxContainer" parent="Panel/Margin/VBox/ContentScroll/Content"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 2
+visible = false
+
+[node name="SkillsPanel" type="VBoxContainer" parent="Panel/Margin/VBox/ContentScroll/Content"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 2
+visible = false
+
+[node name="ItemsPanel" type="VBoxContainer" parent="Panel/Margin/VBox/ContentScroll/Content"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 2
+visible = false

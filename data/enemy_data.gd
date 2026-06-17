@@ -43,3 +43,15 @@ class_name EnemyData
 
 ## Cigarrillos (plata) que deja al derrotarlo.
 @export var reward: int = 3
+
+## --- IA condicional (comportamiento según HP) ---
+## Acción por defecto (> 50% HP).
+@export var ai_normal: String = "attack"
+## Acción cuando está herido (< 50% HP).
+@export var ai_hurt: String = "attack"
+## Acción desesperada (< 25% HP).
+@export var ai_desperate: String = "power"
+## Chance de usar la acción "hurt" en vez de "normal".
+@export var ai_chance_hurt: float = 0.3
+## Chance de usar la acción "desperate" en vez de "normal".
+@export var ai_chance_desperate: float = 0.6

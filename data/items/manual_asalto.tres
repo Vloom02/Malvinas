@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillBook" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/skill_book.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "manual_asalto"
+display_name = "Manual de Tácticas de Asalto"
+description = "Un manual militar encuadernado con tapas negras. Contiene tácticas de combate cuerpo a cuerpo."
+skill_type = 6
+skill_value = 5
+read_text = "Leés el manual de tácticas. Aprendés a apuntar a puntos vitales y a golpear con más fuerza."
+read_flag = "read_manual_asalto"

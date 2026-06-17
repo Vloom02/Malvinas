@@ -23,52 +23,85 @@ color = Color(0.03, 0.02, 0.04, 1)
 
 [node name="EnemyName" type="Label" parent="."]
 offset_left = 16.0
-offset_top = 10.0
-offset_right = 320.0
-offset_bottom = 34.0
+offset_top = 8.0
+offset_right = 624.0
+offset_bottom = 32.0
 text = "Enemigo"
-
-[node name="EnemySprite" type="TextureRect" parent="."]
-offset_left = 80.0
-offset_top = 42.0
-offset_right = 240.0
-offset_bottom = 172.0
-stretch_mode = 5
-expand_mode = 1
+horizontal_alignment = 1
 
 [node name="PartsList" type="VBoxContainer" parent="."]
 offset_left = 16.0
-offset_top = 180.0
-offset_right = 320.0
-offset_bottom = 310.0
+offset_top = 42.0
+offset_right = 190.0
+offset_bottom = 238.0
+theme_override_constants/separation = 2
 
-[node name="Log" type="Label" parent="."]
-offset_left = 16.0
-offset_top = 310.0
-offset_right = 320.0
-offset_bottom = 352.0
-autowrap_mode = 2
+[node name="EnemySprite" type="TextureRect" parent="."]
+offset_left = 240.0
+offset_top = 40.0
+offset_right = 400.0
+offset_bottom = 180.0
+stretch_mode = 5
+expand_mode = 1
 
 [node name="PlayerSprite" type="TextureRect" parent="."]
-offset_left = 360.0
-offset_top = 42.0
-offset_right = 440.0
-offset_bottom = 142.0
+offset_left = 470.0
+offset_top = 50.0
+offset_right = 560.0
+offset_bottom = 150.0
 stretch_mode = 5
 expand_mode = 1
 
 [node name="PlayerInfo" type="Label" parent="."]
-offset_left = 340.0
-offset_top = 150.0
+offset_left = 410.0
+offset_top = 158.0
 offset_right = 624.0
-offset_bottom = 172.0
+offset_bottom = 206.0
+autowrap_mode = 2
 text = "Tu vida: 100/100"
 
-[node name="Actions" type="VBoxContainer" parent="."]
-offset_left = 340.0
-offset_top = 180.0
+[node name="CompanionInfo" type="Label" parent="."]
+offset_left = 410.0
+offset_top = 208.0
 offset_right = 624.0
-offset_bottom = 352.0
+offset_bottom = 232.0
+text = ""
+visible = false
+
+[node name="LogPanel" type="Panel" parent="."]
+offset_left = 8.0
+offset_top = 244.0
+offset_right = 372.0
+offset_bottom = 354.0
+
+[node name="Log" type="Label" parent="LogPanel"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 8.0
+offset_right = -10.0
+offset_bottom = -8.0
+autowrap_mode = 2
+vertical_alignment = 2
+
+[node name="ActionsPanel" type="Panel" parent="."]
+offset_left = 380.0
+offset_top = 244.0
+offset_right = 632.0
+offset_bottom = 354.0
+
+[node name="ActionsScroll" type="ScrollContainer" parent="ActionsPanel"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 6.0
+offset_top = 6.0
+offset_right = -6.0
+offset_bottom = -6.0
+horizontal_scroll_mode = 0
+
+[node name="Actions" type="VBoxContainer" parent="ActionsPanel/ActionsScroll"]
+custom_minimum_size = Vector2(232, 0)
+theme_override_constants/separation = 2
 
 [node name="MadnessTint" type="ColorRect" parent="."]
 anchor_right = 1.0

@@ -9,7 +9,9 @@ signal finished
 signal chosen(index: int)
 
 @onready var text_label: Label = $Panel/Text
-@onready var options_box: VBoxContainer = $Panel/Options
+@onready var options_box: VBoxContainer = $OptionsPanel/Margin/Scroll/Options
+@onready var options_panel: Panel = $OptionsPanel
+@onready var hint: Label = $Panel/Hint
 
 var _queue: Array[String] = []
 var _active: bool = false
@@ -17,6 +19,7 @@ var _choosing: bool = false
 
 func _ready() -> void:
 	visible = false
+	options_panel.visible = false
 
 ## Muestra un mensaje (o lo encola).
 func say(text: String) -> void:
@@ -31,6 +34,8 @@ func ask(text: String, options: Array) -> void:
 	visible = true
 	get_tree().paused = true
 	text_label.text = text
+	hint.visible = false
+	options_panel.visible = true
 	for c in options_box.get_children():
 		c.queue_free()
 	for i in options.size():
@@ -38,6 +43,7 @@ func ask(text: String, options: Array) -> void:
 		b.text = str(options[i])
 		b.pressed.connect(_on_choice.bind(i))
 		options_box.add_child(b)
+	_focus_first_option()
 
 ## Reproduce un DataDialogue: muestra el texto y, si tiene opciones,
 ## permite elegir. Las opciones pueden encadenar a otros DataDialogue.
@@ -50,6 +56,8 @@ func play_data(data: DataDialogue) -> void:
 	visible = true
 	get_tree().paused = true
 	text_label.text = data.text
+	hint.visible = false
+	options_panel.visible = true
 	for c in options_box.get_children():
 		c.queue_free()
 	if data.options.is_empty():
@@ -57,6 +65,7 @@ func play_data(data: DataDialogue) -> void:
 		b.text = "Continuar"
 		b.pressed.connect(_finish_data)
 		options_box.add_child(b)
+		_focus_first_option()
 		return
 	for opt in data.options:
 		var b := Button.new()
@@ -67,6 +76,7 @@ func play_data(data: DataDialogue) -> void:
 		var sanity := int(opt.get("sanity_cost", 0))
 		b.pressed.connect(_on_data_choice.bind(next_path, set_flag, journal, sanity))
 		options_box.add_child(b)
+	_focus_first_option()
 
 func _finish_data() -> void:
 	_choosing = false
@@ -111,6 +121,8 @@ func _advance() -> void:
 	_active = true
 	visible = true
 	get_tree().paused = true
+	options_panel.visible = false
+	hint.visible = true
 	text_label.text = _queue.pop_front()
 
 func _close() -> void:
@@ -118,6 +130,14 @@ func _close() -> void:
 	visible = false
 	get_tree().paused = false
 	finished.emit()
+
+## Pone el foco en el primer botón de opción para poder navegar con teclado.
+func _focus_first_option() -> void:
+	await get_tree().process_frame
+	if options_box.get_child_count() > 0:
+		var first := options_box.get_child(0)
+		if first is Button:
+			(first as Button).grab_focus()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _active and not _choosing and (event.is_action_pressed("interact") or event.is_action_pressed("ui_accept")):

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="DataDialogue" format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/data_dialogue.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+text = "Te mira con desconfianza.\n«Lo mismo que vos, sobrevivir. Pero no confío en extraños. Los extraños mueren rápido en esta guerra.»\nApaga el cigarrillo contra la pared.\n«Andá, soldado. Yo me quedo acá.»"
+options = [{
+"text": "Está bien, cuidate.",
+"next_path": "",
+"set_flag": "",
+"journal_entry": "",
+"sanity_cost": 0
+}]

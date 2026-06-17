@@ -25,11 +25,14 @@ class_name EnemyEncounter
 
 var _triggered: bool = false
 var _visible_to_sanity: bool = true
+var _fading: bool = false
 
 func _ready() -> void:
 	if unique_id != "" and GameState.has_flag("dead_" + unique_id):
 		queue_free()
 		return
+	if not is_in_group("enemies"):
+		add_to_group("enemies")
 	if sprite_texture != null:
 		$Sprite2D.texture = sprite_texture
 	if label_text != "":
@@ -60,10 +63,14 @@ func _process(_delta: float) -> void:
 		var tw := create_tween()
 		tw.tween_property($Sprite2D, "modulate", Color(1, 1, 1, 1), 0.6).from(Color(1, 1, 1, 0))
 	else:
+		if _fading:
+			return
+		_fading = true
 		var tw := create_tween()
 		tw.tween_property($Sprite2D, "modulate", Color(1, 1, 1, 0), 0.4)
 		await tw.finished
-		if is_instance_valid(self):
+		_fading = false
+		if is_instance_valid(self) and not _visible_to_sanity:
 			visible = false
 
 func _physics_process(delta: float) -> void:
@@ -90,7 +97,35 @@ func _on_body_entered(body: Node) -> void:
 	if _triggered:
 		return
 	if body.is_in_group("player"):
+		if unique_id != "" and GameState.has_flag("dead_" + unique_id):
+			queue_free()
+			return
 		_triggered = true
-		GameState.pending_kill_id = unique_id
-		var from_scene := get_tree().current_scene.scene_file_path
-		GameState.start_combat(enemy_path, from_scene)
+		_offer_stealth_or_combat()
+
+func _offer_stealth_or_combat() -> void:
+	# Si tiene sigilo, ofrecer la opción de esquivar.
+	var stealth_mod := GameState.get_stealth_mod()
+	var has_stealth := stealth_mod > 0
+	if has_stealth:
+		Dialogue.ask("Algo se mueve en la oscuridad...", ["Pelear", "Intentar pasar desapercibido (sigilo)"])
+		var choice: int = await Dialogue.chosen
+		if choice == 1:
+			var all_enemies := get_tree().get_nodes_in_group("enemies")
+			var nearby: Array = []
+			for e in all_enemies:
+				if is_instance_valid(e) and global_position.distance_to(e.global_position) < 200.0:
+					nearby.append(e)
+			var result := Stealth.try_stealth(nearby)
+			Dialogue.say(result["text"])
+			await Dialogue.finished
+			if result["success"]:
+				_triggered = false
+				return
+			# Si falla, cae al combate.
+	_start_combat()
+
+func _start_combat() -> void:
+	GameState.pending_kill_id = unique_id
+	var from_scene := get_tree().current_scene.scene_file_path
+	GameState.start_combat(enemy_path, from_scene)

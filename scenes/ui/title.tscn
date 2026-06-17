@@ -32,7 +32,7 @@ horizontal_alignment = 1
 [node name="Center" type="CenterContainer" parent="."]
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = 40.0
+offset_top = 150.0
 
 [node name="VBox" type="VBoxContainer" parent="Center"]
 custom_minimum_size = Vector2(220, 0)
@@ -43,6 +43,9 @@ text = "Nueva partida"
 
 [node name="Continuar" type="Button" parent="Center/VBox"]
 text = "Continuar"
+
+[node name="Opciones" type="Button" parent="Center/VBox"]
+text = "Opciones"
 
 [node name="Salir" type="Button" parent="Center/VBox"]
 text = "Salir"

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillBook" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/skill_book.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "manual_sigilo"
+display_name = "Manual de reconocimiento"
+description = "Un manual de infantería sobre movimiento sigiloso. Aprendés a moverte mejor."
+skill_type = 4
+skill_value = 2
+read_text = "Leés el manual. Tu paso se vuelve más sigiloso."
+read_flag = "read_manual_sigilo"

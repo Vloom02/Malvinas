@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="DataDialogue" format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/data_dialogue.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+text = "El hombre levanta la mirada del cigarrillo. Tiene los ojos rojos y las manos temblando.\n«¿Quién sos? No te conozco. ¿Venís solo?»"
+options = [{
+"text": "Soy soldado, como vos. Estoy buscando la salida.",
+"next_path": "res://data/dialogue/pascual_confianza.tres",
+"set_flag": "",
+"journal_entry": "Encontré a un soldado solo en las trincheras. Fuma cigarrillos de papel y no parece confiar en nadie.",
+"sanity_cost": 0
+}, {
+"text": "¿Qué hacés acá solo, soldado?",
+"next_path": "res://data/dialogue/pascual_rechazo.tres",
+"set_flag": "",
+"journal_entry": "",
+"sanity_cost": 0
+}, {
+"text": "Nada, sigo camino.",
+"next_path": "",
+"set_flag": "",
+"journal_entry": "",
+"sanity_cost": 0
+}]

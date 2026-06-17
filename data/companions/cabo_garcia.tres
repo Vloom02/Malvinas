@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CompanionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/companion_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "cabo_garcia"
+display_name = "Cabo García"
+description = "Un cabo veterano que sobrevivió a la emboscada en el monte. Conoce la zona y sabe manejar un fusil."
+hp = 70
+hp_max = 70
+attack = 10
+defense = 2
+heal_power = 0
+recruit_text = "Sirvo con vos, soldado. No es la primera vez que me mandan al infierno."
+death_text = "Decile a mi vieja... que no fue alpedo..."
+recruit_flag = ""
+recruited_flag = "recruited_cabo_garcia"
+can_heal = false
+can_scout = true
+can_force = true

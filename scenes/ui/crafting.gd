@@ -20,6 +20,7 @@ func open() -> void:
 	visible = true
 	get_tree().paused = true
 	_refresh()
+	cerrar_btn.call_deferred("grab_focus")
 
 func _close() -> void:
 	visible = false
