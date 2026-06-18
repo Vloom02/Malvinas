@@ -12,5 +12,6 @@ pulse_mod = 0
 weapon_type = "palo"
 one_handed = true
 weight = 2
+variance = 3
 attack_text = "Golpeás a %s con el palo."
 find_text = "Armás un palo con filo de los escombros."

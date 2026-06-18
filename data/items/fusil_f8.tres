@@ -13,5 +13,6 @@ dodge_mod = -1
 weapon_type = "fusil"
 one_handed = false
 weight = 3
+variance = 3
 attack_text = "Disparás una ráfaga a %s."
 find_text = "Encontrás un FAL entre los escombros, con pocas balas."

@@ -360,6 +360,11 @@ func _on_attack_part(part: String) -> void:
 	var dmg := GameState.get_player_damage()
 	var weapon := GameState.equipped_weapon
 
+	# Aplicar varianza del arma al daño base
+	if weapon != null and weapon.variance > 0:
+		dmg = maxi(1, dmg + randi_range(-weapon.variance, weapon.variance))
+	var base_dmg := dmg
+
 	if _is_wounded():
 		var r: Dictionary = Dice.check(GameState.get_pulse_mod(), PULSE_DC)
 		if r["fumble"]:
@@ -367,13 +372,14 @@ func _on_attack_part(part: String) -> void:
 			_log("Te tiembla el pulso y errás del todo  [d20 %d]" % r["die"])
 		elif r["success"]:
 			if r["crit"]:
-				dmg = GameState.get_player_damage() * 2
+				dmg = base_dmg * 2
 				_log("¡Pulso de acero! (20 natural)")
 			else:
+				dmg = base_dmg
 				_log("Aguantás el pulso  [d20 %d+%d=%d vs %d]" % [
 					r["die"], r["modifier"], r["total"], PULSE_DC])
 		else:
-			dmg = int(GameState.get_player_damage() / 2.0)
+			dmg = maxi(1, int(base_dmg / 2.0))
 			_log("El brazo herido te falla, pegás flojo  [d20 %d+%d=%d vs %d]" % [
 				r["die"], r["modifier"], r["total"], PULSE_DC])
 
@@ -705,7 +711,11 @@ func _on_risky_attack() -> void:
 
 	if v["player_wins"]:
 		var part := _strongest_part()
-		var dmg := GameState.get_player_damage() * 2
+		var dmg: int = GameState.get_player_damage()
+		var weapon_r: WeaponData = GameState.equipped_weapon
+		if weapon_r != null and weapon_r.variance > 0:
+			dmg = maxi(1, dmg + randi_range(-weapon_r.variance, weapon_r.variance))
+		dmg *= 2
 		parts_hp[part] = maxi(0, parts_hp[part] - dmg)
 		_update_part_label(part)
 		_log("¡Ganás! Golpe brutal a %s: %d de daño." % [part, dmg])
