@@ -1,0 +1,23 @@
+GIMP Palette
+Name: Malvinas
+Columns: 8
+# Paleta oficial de Codename Malvinas. Cargar en Aseprite:
+# Paleta (panel) -> menu -> Load Palette -> elegir este .gpl
+# Tonos fríos y apagados, guerra de Malvinas 1982.
+ 26  26  31	Fondo oscuro
+ 38  40  47	Sombra azulada
+ 74  55  40	Tierra / barro
+ 90  61  40	Madera mango
+122  84  54	Madera luz
+ 61  74  46	Ropa militar
+ 86 102  64	Ropa militar luz
+ 58  63  71	Acero sombra
+107 114 128	Metal base
+154 161 173	Metal luz
+196 149 106	Piel
+123 163 196	Acento frio
+139 105  20	Laton sombra
+196 146  28	Laton base
+232 184  75	Laton luz
+ 90  14  14	Sangre oscura
+139  26  26	Sangre

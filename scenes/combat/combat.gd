@@ -81,6 +81,17 @@ func _ready() -> void:
 			parts_hp[part] = int(parts_hp[part] * 1.3)
 		enemy.attack += 3
 
+	# Daño pre-combate por dispararle en el mapa: resta del torso (sin matarlo)
+	# y arranca sangrando. Lo aplicamos antes de dibujar las partes.
+	var pre_dmg := GameState.pending_pre_damage
+	var pre_bleed := GameState.pending_enemy_bleed
+	GameState.pending_pre_damage = 0
+	GameState.pending_enemy_bleed = 0
+	if pre_dmg > 0 and parts_hp.has("torso"):
+		parts_hp["torso"] = maxi(1, parts_hp["torso"] - pre_dmg)
+	if pre_bleed > 0:
+		_enemy_bleed += pre_bleed
+
 	enemy_name_label.text = enemy.display_name
 	if enemy.sprite != null:
 		enemy_sprite.texture = enemy.sprite
@@ -91,6 +102,8 @@ func _ready() -> void:
 	_build_action_buttons()
 	_refresh_player_info()
 	_log("Te enfrentás a: %s." % enemy.display_name)
+	if pre_dmg > 0 or pre_bleed > 0:
+		_log("Ya venía herido de tus disparos.")
 
 	_rest_position = position
 	GameState.player_died.connect(_on_player_died)
@@ -504,6 +517,88 @@ func _execute_ai_action(action: String) -> void:
 				_lose()
 			else:
 				_start_player_turn()
+		"burst":
+			_log("%s descarga una ráfaga de disparos." % enemy.display_name)
+			var dmg := maxi(1, int(enemy.attack * 0.6) + GameState.danger)
+			dmg = maxi(1, int(dmg * GameState.get_damage_taken_mult()))
+			dmg = maxi(1, dmg - GameState.get_defense_mod())
+			_companion_take_hit(dmg)
+			GameState.apply_bleeding(1)
+			AudioManager.play_sfx(SFX_HIT, -2.0)
+			_log("La ráfaga impacta: -%d de vida y sangrado." % dmg)
+			_shake(5.0, 0.3)
+			_refresh_player_info()
+			if GameState.player_hp <= 0:
+				_lose()
+			else:
+				_start_player_turn()
+		"grenade":
+			_log("%s tira una granada. ¡Agachate!" % enemy.display_name)
+			var dmg := maxi(1, enemy.attack + 8 + GameState.danger)
+			if _guard_active:
+				dmg = maxi(1, int(dmg * 0.5))
+				_guard_active = false
+				_log("Bloqueás parte de la metralla con la guardia.")
+			dmg = maxi(1, int(dmg * GameState.get_damage_taken_mult()))
+			dmg = maxi(1, dmg - GameState.get_defense_mod())
+			_companion_take_hit(dmg)
+			AudioManager.play_sfx(SFX_HIT, -4.0)
+			_log("La metralla te alcanza: -%d de vida." % dmg)
+			_shake(8.0, 0.4)
+			_refresh_player_info()
+			if GameState.player_hp <= 0:
+				_lose()
+			else:
+				_start_player_turn()
+		"bite":
+			_log("%s te clava los dientes." % enemy.display_name)
+			var dmg := maxi(1, enemy.attack + 4 + GameState.danger)
+			dmg = maxi(1, int(dmg * GameState.get_damage_taken_mult()))
+			dmg = maxi(1, dmg - GameState.get_defense_mod())
+			_companion_take_hit(dmg)
+			GameState.apply_bleeding(2)
+			AudioManager.play_sfx(SFX_HIT, -2.0)
+			_log("La mordida te desgarra: -%d de vida y sangrado profundo." % dmg)
+			_shake(5.0, 0.3)
+			_refresh_player_info()
+			if GameState.player_hp <= 0:
+				_lose()
+			else:
+				_start_player_turn()
+		"kamikaze":
+			_log("%s se abalanza sobre vos con furia suicida." % enemy.display_name)
+			var dmg := maxi(1, int(enemy.attack * 1.8) + GameState.danger)
+			dmg = maxi(1, int(dmg * GameState.get_damage_taken_mult()))
+			dmg = maxi(1, dmg - GameState.get_defense_mod())
+			_companion_take_hit(dmg)
+			AudioManager.play_sfx(SFX_HIT, -2.0)
+			_log("El ataque te revuelca: -%d de vida." % dmg)
+			_shake(10.0, 0.5)
+			for part in parts_hp.keys():
+				if parts_hp[part] > 0:
+					parts_hp[part] = maxi(0, parts_hp[part] - 8)
+					_update_part_label(part)
+			_log("%s se hiere a sí mismo en el ataque." % enemy.display_name)
+			_refresh_player_info()
+			if _enemy_dead():
+				_win()
+				return
+			if GameState.player_hp <= 0:
+				_lose()
+			else:
+				_start_player_turn()
+		"whisper":
+			_log("Un susurro helado llena tu mente.")
+			GameState.sanity = maxi(0, GameState.sanity - 15)
+			GameState.apply_paralysis(1)
+			_log("El susurro te paraliza. Cordura -15.")
+			_start_player_turn()
+		"distort":
+			_log("La realidad se distorsiona frente a tus ojos.")
+			GameState.apply_blind(2)
+			GameState.sanity = maxi(0, GameState.sanity - 8)
+			_log("La distorsión te ciega. Ceguera x2, cordura -8.")
+			_start_player_turn()
 		"power":
 			if _special_cd <= 0:
 				_enemy_charging = true

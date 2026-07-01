@@ -22,19 +22,35 @@ func _unhandled_input(event: InputEvent) -> void:
 		_run_ending()
 
 func _run_ending() -> void:
-	Dialogue.ask("La radio cruje entre el viento. ¿Qué informás?",
-		["La verdad: estamos rodeados", "Mentís: posición asegurada"])
+	var options := ["La verdad: estamos rodeados", "Mentís: posición asegurada"]
+	var capitán_muerto := GameState.has_flag("dead_barco_capitan")
+	if capitán_muerto:
+		options.append("Pedir evacuación: el barco está libre")
+	Dialogue.ask("La radio cruje entre el viento. ¿Qué informás?", options)
 	var choice: int = await Dialogue.chosen
 
 	var text := ""
 	if choice == 0:
 		text = "Decís la verdad. Te ordenan resistir hasta el último hombre.\n"
 		GameState.add_journal("Informaste la verdad por radio. Te mandaron a resistir.")
-	else:
+	elif choice == 1:
 		text = "Mentís: «Todo en orden.» Nadie va a venir a buscarte.\n"
 		GameState.add_journal("Mentiste por radio. Nadie vendrá.")
+	elif choice == 2 and capitán_muerto:
+		text = "Pedís evacuación inmediata. El barco está asegurado.\n"
+		text += "Una hora después, un helicóptero baja entre la niebla.\n"
+		text += "Subís. Las islas quedan atrás.\n"
+		GameState.add_journal("Evacuación confirmada. Saliste de las Malvinas con vida.")
+		Dialogue.say(text)
+		await Dialogue.finished
+		Dialogue.say("[ HAS SOBREVIVIDO — Gracias por jugar ]")
+		await Dialogue.finished
+		get_tree().change_scene_to_file("res://scenes/ui/title.tscn")
+		return
 
-	if GameState.has_flag("dead_campo_espectro"):
+	if GameState.has_flag("dead_barco_capitan"):
+		text += "El Capitán ya no representa una amenaza. El barco está limpio.\n"
+	elif GameState.has_flag("dead_campo_espectro"):
 		text += "Lo que te perseguía quedó tendido en el barro. Por ahora.\n"
 	else:
 		text += "Algo sigue acechando en la niebla, esperando.\n"

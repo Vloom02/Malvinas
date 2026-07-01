@@ -16,16 +16,16 @@ const ZONES := {
 		"name": "Infantería",
 		"difficulty": 1,
 		"maps": [
-			"res://scenes/maps/nivel1_trinchera.tscn",
-			"res://scenes/maps/nivel1_campo.tscn",
-			"res://scenes/maps/nivel1_pozo.tscn",
+			"res://scenes/maps/sandbox.tscn",
 		],
 		"enemy_tier": 1,
 	},
 	"naval": {
 		"name": "Naval",
 		"difficulty": 2,
-		"maps": ["res://scenes/maps/naval_barco.tscn"],
+		# TODO: placeholder hasta que exista naval_barco.tscn — hoy NO hay
+		# contenido naval real, esto solo evita un array vacío.
+		"maps": ["res://scenes/maps/sandbox.tscn"],
 		"enemy_tier": 2,
 	},
 }

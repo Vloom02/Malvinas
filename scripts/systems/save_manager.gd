@@ -19,6 +19,8 @@ const VALID_KEYS := {
 	"bonus_hp": TYPE_INT, "consequences": TYPE_DICTIONARY,
 	"current_level": TYPE_INT, "current_zone": TYPE_STRING,
 	"companion": TYPE_STRING, "companion_hp": TYPE_INT, "companion_hp_max": TYPE_INT,
+	"concussion": TYPE_INT, "shell_shock": TYPE_INT, "burns": TYPE_INT,
+	"wound_infection": TYPE_INT, "artillery_used": TYPE_BOOL,
 }
 
 func has_save() -> bool:

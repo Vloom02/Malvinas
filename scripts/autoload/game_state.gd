@@ -136,8 +136,12 @@ func apply_skill_book(book: SkillBook) -> bool:
 
 # --- Estado de combate ---
 var pending_enemy_path: String = ""
-var return_scene_path: String = "res://scenes/maps/nivel1_trinchera.tscn"
+var return_scene_path: String = "res://scenes/maps/sandbox.tscn"
 var _madness_triggered: bool = false
+## Daño/sangrado infligido al enemigo ANTES del combate (al dispararle en el
+## mapa). El combate los consume en _ready (resta HP del torso, suma sangrado).
+var pending_pre_damage: int = 0
+var pending_enemy_bleed: int = 0
 ## True mientras estás peleando: congela eventos del mundo, alucinaciones y
 ## sangrado (que solo avanza al caminar). Evita que aparezcan peleas encima
 ## de otra pelea.
@@ -212,6 +216,12 @@ const AMBIENT_LIGHT_MAP: Dictionary = {
 	"res://scenes/maps/nivel1_pozo.tscn": 30,
 	"res://scenes/maps/nivel1_campo.tscn": 90,
 	"res://scenes/maps/naval_barco.tscn": 20,
+	"res://scenes/maps/malvinas_mapa.tscn": 85,
+	"res://scenes/maps/area_costera.tscn": 75,
+	"res://scenes/maps/nivel_campamento.tscn": 100,
+	"res://scenes/maps/nivel_trincheras.tscn": 65,
+	"res://scenes/maps/nivel_jefe.tscn": 55,
+	"res://scenes/maps/sandbox.tscn": 85,
 }
 
 # --- Propiedades de luz ---
@@ -665,6 +675,8 @@ func load_game() -> bool:
 	in_combat = false
 	_bleed_steps = 0
 	_hallu_timer = 0.0
+	pending_pre_damage = 0
+	pending_enemy_bleed = 0
 	bleeding = int(data.get("bleeding", 0))
 	cold = int(data.get("cold", 0))
 	infection = int(data.get("infection", 0))
@@ -731,7 +743,7 @@ func load_game() -> bool:
 			if pt.has(part):
 				body_parts_state[part] = pt[part]
 	next_spawn = ""
-	_change_scene(str(data.get("scene", "res://scenes/maps/test_room.tscn")))
+	_change_scene(str(data.get("scene", "res://scenes/maps/sandbox.tscn")))
 	return true
 
 # --- Partida nueva ---
@@ -741,6 +753,8 @@ func new_game() -> void:
 	_dead = false
 	in_combat = false
 	_bleed_steps = 0
+	pending_pre_damage = 0
+	pending_enemy_bleed = 0
 	can_save = false
 	linterna_on = false
 	light_battery = 100.0

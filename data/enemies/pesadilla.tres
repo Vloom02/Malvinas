@@ -17,7 +17,7 @@ body_parts = {
 }
 attack = 14
 defense = 3
-loot_table = ["diente", "carne_podrida"]
+loot_table = ["diente", "carne_podrida", "morfina"]
 is_boss = false
 reward = 5
 ai_normal = "attack"

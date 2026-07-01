@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://data/enemy_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemies/soldado_combat.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+sprite = ExtResource("2")
+display_name = "El Capitán"
+body_parts = {
+"cabeza": 30,
+"torso": 100,
+"brazo_izq": 22,
+"brazo_der": 22,
+"pierna_izq": 20,
+"pierna_der": 20
+}
+attack = 16
+defense = 4
+loot_table = ["c4", "coordenadas_artilleria"]
+is_boss = true
+power_name = "Andanada de fusilería"
+power_damage = 28
+power_dc = 14
+power_chance = 0.35
+reward = 10
+ai_normal = "attack"
+ai_hurt = "grenade"
+ai_desperate = "power"
+ai_chance_hurt = 0.35
+ai_chance_desperate = 0.5

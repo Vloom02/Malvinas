@@ -78,10 +78,11 @@ func _do_load() -> void:
 		_info("No hay ningún reporte previo.")
 
 func _buy(item: ItemData) -> void:
+	if GameState.money < item.price:
+		_info("No te alcanzan los cigarrillos. Necesitás %d." % item.price)
+		return
 	if GameState.buy_item(item):
 		_info("Comprás: %s." % item.display_name)
-	else:
-		_info("No te alcanzan los cigarrillos.")
 
 func _do_rest() -> void:
 	GameState.player_hp += 30

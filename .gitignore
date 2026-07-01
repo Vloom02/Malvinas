@@ -30,3 +30,11 @@ desktop.ini
 
 # IMPORTANTE: los archivos *.import SÍ se versionan (no van acá).
 # Definen cómo Godot importa cada asset; si faltan, se rompe el repo.
+
+# Logs temporales de corridas de Godot
+_godot_out.txt
+_godot_err.txt
+
+# Tooling de agentes / plugins (no es contenido del juego)
+.agents/
+skills-lock.json

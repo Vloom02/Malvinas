@@ -23,11 +23,28 @@ func _ready() -> void:
 			player.global_position = spawn.global_position
 		GameState.next_spawn = ""
 
+	_onboarding()
+
 	if encounter_chance > 0.0 and Dice.chance(encounter_chance):
 		if stealth_dc > 0:
 			call_deferred("_stealth_check")
 		else:
 			call_deferred("_ambush")
+
+func _onboarding() -> void:
+	if GameState.has_flag("intro_shown"):
+		return
+	var path := get_tree().current_scene.scene_file_path if get_tree().current_scene != null else ""
+	if not path.ends_with("sandbox.tscn"):
+		return
+	GameState.set_flag("intro_shown")
+	GameState.add_journal("Malvinas, 1982. La brigada está diezmada. Hay que llegar al pozo de la zona sur y pedir ayuda por radio.")
+	GameState.add_journal("Controles: WASD = moverte, E = interactuar, I = menú/equipo, J = diario, R = tirar dado, Esc = pausa.")
+	await get_tree().create_timer(0.5).timeout
+	var scene := get_tree().current_scene
+	if scene != null:
+		Dialogue.say("Despertás en la trinchera.\nTenés que llegar al pozo de la zona sur y pedir ayuda por radio.\n\nWASD = moverte, E = usar, I = inventario, J = diario")
+		await Dialogue.finished
 
 ## Le da colisión a los props decorativos (sacos, barriles, cruces, rocas) que
 ## están como Sprite2D plano dentro del nodo "Deco". Los props que ya son

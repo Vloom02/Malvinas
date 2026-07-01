@@ -32,6 +32,12 @@ var sprite: AnimatedSprite2D
 ## tiene la linterna dibujada y el cono de luz, que salen siempre hacia adelante.
 var _light_rig: Node2D
 
+## --- Arma sostenida ---
+var _weapon_rig: Node2D
+var _weapon_sprite: Sprite2D
+var _weapon_facing: String = ""  ## última dirección con la que se actualizó el sprite del arma
+var _shoot_cd: float = 0.0       ## cooldown entre disparos
+
 func _ready() -> void:
 	$Camera2D.zoom = Vector2(GameState.camera_zoom, GameState.camera_zoom)
 	sprite = AnimatedSprite2D.new()
@@ -40,6 +46,47 @@ func _ready() -> void:
 	add_child(sprite)
 	_set_anim("idle", "south")
 	_build_flashlight()
+	_build_weapon_rig()
+	GameState.weapon_changed.connect(_on_weapon_changed)
+
+## Crea el nodo que sostiene el sprite del arma sobre el personaje.
+func _build_weapon_rig() -> void:
+	_weapon_rig = Node2D.new()
+	_weapon_rig.z_index = 1
+	_weapon_rig.visible = false
+	add_child(_weapon_rig)
+	_weapon_sprite = Sprite2D.new()
+	_weapon_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_weapon_rig.add_child(_weapon_sprite)
+
+func _on_weapon_changed() -> void:
+	_weapon_facing = ""  # fuerza refrescar el sprite en el próximo frame
+	_refresh_weapon()
+
+## Actualiza el sprite del arma sostenida según el arma equipada y la dirección.
+## Usa <base>_<dir>.png; si falta una dirección, cae al "este" (espejado en oeste).
+func _refresh_weapon() -> void:
+	if _weapon_rig == null:
+		return
+	var w: WeaponData = GameState.equipped_weapon
+	if w == null or w.held_sprite_base == "":
+		_weapon_rig.visible = false
+		_weapon_facing = "__none__"
+		return
+	_weapon_rig.visible = true
+	var dir_name: String = {"south": "sur", "north": "norte", "east": "este", "west": "oeste"}.get(_facing, "este")
+	var path := "%s_%s.png" % [w.held_sprite_base, dir_name]
+	var flip := false
+	if not ResourceLoader.exists(path):
+		path = w.held_sprite_base + "_este.png"  # fallback
+		flip = (_facing == "west")
+	if ResourceLoader.exists(path):
+		_weapon_sprite.texture = load(path)
+	_weapon_sprite.flip_h = flip
+	_weapon_rig.position = HAND_OFFSET.get(_facing, Vector2(0, -6))
+	# Mirando hacia arriba, el arma va detrás del cuerpo.
+	_weapon_rig.z_index = -1 if facing_vector.y < -0.5 else 1
+	_weapon_facing = _facing
 
 ## Construye la linterna y su haz como dibujo vectorial (sin depender de un PNG).
 ## Todo apunta a +x local; el rig se rota según la dirección en _update_flashlight.
@@ -106,6 +153,8 @@ func _slice(tex: Texture2D, col: int, row: int) -> AtlasTexture:
 	return a
 
 func _physics_process(delta: float) -> void:
+	if _shoot_cd > 0.0:
+		_shoot_cd -= delta
 	var direction := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 
 	var spd := speed
@@ -137,6 +186,8 @@ func _update_animation(direction: Vector2) -> void:
 		facing_vector = FACING_VEC[_facing]
 	_set_anim(anim, _facing)
 	_update_flashlight()
+	if _facing != _weapon_facing:
+		_refresh_weapon()
 
 func _update_flashlight() -> void:
 	var on := GameState.linterna_on and GameState.light_battery > 0
@@ -199,3 +250,69 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif n == 1:
 			comment = "Pifia. Mal presagio..."
 		Dialogue.say("Tirás el dado...\n\n[ d20 ]   =   %d\n%s" % [n, comment])
+	elif event.is_action_pressed("shoot"):
+		_fire()
+
+## Dispara el arma de fuego equipada (tecla F). Fogonazo + retroceso + impacto.
+func _fire() -> void:
+	if get_tree().paused:
+		return
+	var w: WeaponData = GameState.equipped_weapon
+	if w == null or not w.is_firearm():
+		return
+	if _shoot_cd > 0.0:
+		return
+	_shoot_cd = 0.45
+
+	# Punta del caño = mano + un poco hacia adelante.
+	var muzzle: Vector2 = HAND_OFFSET.get(_facing, Vector2(0, -6)) + facing_vector * 18.0
+	_spawn_muzzle_flash(muzzle)
+	_weapon_recoil()
+	AudioManager.play_sfx("res://assets/audio/disparo.wav", -4.0)
+	_shoot_hit()
+
+## Destello del disparo: una estrella amarilla que crece y se desvanece rápido.
+func _spawn_muzzle_flash(at: Vector2) -> void:
+	var flash := Polygon2D.new()
+	flash.position = at
+	flash.z_index = 2
+	flash.polygon = PackedVector2Array([
+		Vector2(0, -7), Vector2(2, -2), Vector2(8, 0), Vector2(2, 2),
+		Vector2(0, 7), Vector2(-2, 2), Vector2(-8, 0), Vector2(-2, -2)])
+	flash.color = Color(1.0, 0.95, 0.6)
+	add_child(flash)
+	var tw := create_tween()
+	tw.tween_property(flash, "scale", Vector2(1.7, 1.7), 0.05)
+	tw.parallel().tween_property(flash, "modulate:a", 0.0, 0.12)
+	tw.tween_callback(flash.queue_free)
+
+## El arma "patea" hacia atrás un instante.
+func _weapon_recoil() -> void:
+	if _weapon_rig == null or not _weapon_rig.visible:
+		return
+	var base_pos: Vector2 = HAND_OFFSET.get(_facing, Vector2(0, -6))
+	var kicked := base_pos - facing_vector * 3.0
+	var tw := create_tween()
+	tw.tween_property(_weapon_rig, "position", kicked, 0.04)
+	tw.tween_property(_weapon_rig, "position", base_pos, 0.10)
+
+## Busca el enemigo más cercano AL FRENTE dentro del alcance y lo hiere.
+func _shoot_hit() -> void:
+	var range_px := 200.0
+	var best: Node2D = null
+	var best_d := range_px
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if not is_instance_valid(e) or not (e is Node2D):
+			continue
+		var to_e: Vector2 = (e as Node2D).global_position - global_position
+		var d := to_e.length()
+		if d > range_px or d < 0.01:
+			continue
+		if to_e.normalized().dot(facing_vector) < 0.5:  # debe estar hacia adelante
+			continue
+		if d < best_d:
+			best_d = d
+			best = e
+	if best != null and best.has_method("hit_from_world"):
+		var dmg := GameState.get_player_damage(true)
+		best.hit_from_world(dmg, 2)

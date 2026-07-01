@@ -41,3 +41,12 @@ class_name WeaponData
 ## Varianza de daño: el daño real varía ±variance.
 ## 0 = daño fijo, 2 = ±2, 5 = ±5, 10 = ±10, etc.
 @export var variance: int = 0
+
+## Carpeta + prefijo del sprite SOSTENIDO en el mundo (sin "_dir.png").
+## Ej: "res://assets/sprites/weapons/fal" → carga fal_este.png / fal_oeste.png /
+## fal_norte.png / fal_sur.png. Vacío = no se muestra arma en la mano.
+@export var held_sprite_base: String = ""
+
+## Devuelve true si es un arma de fuego (se puede disparar en el mapa con F).
+func is_firearm() -> bool:
+	return weapon_type in ["fusil", "pistola", "escopeta", "subfusil", "ametralladora"]

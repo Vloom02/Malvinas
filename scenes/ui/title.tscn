@@ -1,6 +1,12 @@
 [gd_scene format=3 uid="uid://chugfq8p6uip7"]
 
 [ext_resource type="Script" path="res://scenes/ui/title.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/ui/menu/titulo.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/ui/menu/btn_nuevo_juego.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/ui/menu/btn_continuar.png" id="4"]
+[ext_resource type="Texture2D" path="res://assets/ui/menu/btn_opciones.png" id="5"]
+[ext_resource type="Texture2D" path="res://assets/ui/menu/btn_logros.png" id="6"]
+[ext_resource type="Texture2D" path="res://assets/ui/menu/btn_salir.png" id="7"]
 
 [node name="Title" type="Control"]
 layout_mode = 3
@@ -14,41 +20,90 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 color = Color(0.04, 0.04, 0.05, 1)
 
-[node name="Titulo" type="Label" parent="."]
-anchor_right = 1.0
-offset_top = 56.0
-offset_bottom = 110.0
-theme_override_font_sizes/font_size = 40
-text = "MALVINAS"
-horizontal_alignment = 1
-
-[node name="Subtitulo" type="Label" parent="."]
-anchor_right = 1.0
-offset_top = 110.0
-offset_bottom = 134.0
-text = "codename · 1982"
-horizontal_alignment = 1
+[node name="Logo" type="TextureRect" parent="."]
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -110.0
+offset_right = 110.0
+offset_top = 18.0
+offset_bottom = 167.0
+texture = ExtResource("2")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Center" type="CenterContainer" parent="."]
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = 150.0
+offset_top = 176.0
 
 [node name="VBox" type="VBoxContainer" parent="Center"]
 custom_minimum_size = Vector2(220, 0)
-theme_override_constants/separation = 10
+theme_override_constants/separation = 4
 
 [node name="Nueva" type="Button" parent="Center/VBox"]
-text = "Nueva partida"
+custom_minimum_size = Vector2(220, 29)
+flat = true
+text = ""
+
+[node name="Tex" type="TextureRect" parent="Center/VBox/Nueva"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = ExtResource("3")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Continuar" type="Button" parent="Center/VBox"]
-text = "Continuar"
+custom_minimum_size = Vector2(220, 28)
+flat = true
+text = ""
+
+[node name="Tex" type="TextureRect" parent="Center/VBox/Continuar"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = ExtResource("4")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Opciones" type="Button" parent="Center/VBox"]
-text = "Opciones"
+custom_minimum_size = Vector2(220, 28)
+flat = true
+text = ""
+
+[node name="Tex" type="TextureRect" parent="Center/VBox/Opciones"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = ExtResource("5")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Logros" type="Button" parent="Center/VBox"]
+custom_minimum_size = Vector2(220, 27)
+flat = true
+text = ""
+
+[node name="Tex" type="TextureRect" parent="Center/VBox/Logros"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = ExtResource("6")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Salir" type="Button" parent="Center/VBox"]
-text = "Salir"
+custom_minimum_size = Vector2(220, 25)
+flat = true
+text = ""
+
+[node name="Tex" type="TextureRect" parent="Center/VBox/Salir"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = ExtResource("7")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="ConsagracionLabel" type="Label" parent="Center/VBox"]
 visible = false
@@ -56,3 +111,9 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 custom_minimum_size = Vector2(280, 160)
+
+[node name="Cursor" type="Label" parent="."]
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.78, 0.12, 0.12, 1)
+theme_override_font_sizes/font_size = 16
+text = "▶"

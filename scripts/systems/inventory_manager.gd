@@ -2,7 +2,7 @@ class_name InventoryManager
 ## Gestiona inventario, items, crafteo y tienda.
 ## Se instancia dentro de GameState para mantener la API existente.
 
-const INVENTORY_MAX := 12
+const INVENTORY_MAX := 999999
 
 var inventory: Dictionary = {}   # ItemData -> cantidad
 var money: int = 0
@@ -58,10 +58,15 @@ func setup() -> void:
 	}
 	shop_items = [ITEM_VENDA, ITEM_RACION, ITEM_MORFINA, ITEM_ANTIBIOTICOS, ITEM_FOSFOROS, ITEM_TABLILLA, ITEM_RAMA, ITEM_ALCOHOL, ITEM_LINTERNA, ITEM_PILAS]
 
+## Arma de prueba: el FAL arranca en el inventario para poder equiparla y probar
+## el disparo. (Las armas se guardan en el dict de inventario como WeaponData.)
+const WEAPON_FAL := preload("res://data/items/fal.tres")
+
 func give_starting_items(game_mode: String) -> void:
 	add_item(ITEM_VENDA, 1)
 	add_item(ITEM_RACION, 1)
 	add_item(ITEM_RAMA, 2)
+	inventory[WEAPON_FAL] = 1
 	if game_mode == "cabeza":
 		money = 10
 		add_item(ITEM_LINTERNA, 1)
@@ -76,8 +81,6 @@ func inventory_total() -> int:
 
 func add_item(item: ItemData, qty: int = 1) -> bool:
 	if item == null:
-		return false
-	if inventory_total() + qty > INVENTORY_MAX:
 		return false
 	inventory[item] = int(inventory.get(item, 0)) + qty
 	print("[Inventario] +%d %s" % [qty, item.display_name])

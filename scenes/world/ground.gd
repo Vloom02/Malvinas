@@ -8,11 +8,11 @@ extends TileMapLayer
 @export var cols: int = 20
 @export var rows: int = 12
 
-## El tile "todo roca" está en la posición (0,3) del atlas. Fuente 0.
-const ROCK_TILE := Vector2i(0, 3)
+## Tile de relleno (barro LPC), fuente 0 = dirt.png dentro de campo_batalla_tileset.
+const DIRT_TILE := Vector2i(1, 2)
 const SOURCE_ID := 0
 
 func _ready() -> void:
 	for x in cols:
 		for y in rows:
-			set_cell(Vector2i(x, y), SOURCE_ID, ROCK_TILE)
+			set_cell(Vector2i(x, y), SOURCE_ID, DIRT_TILE)
