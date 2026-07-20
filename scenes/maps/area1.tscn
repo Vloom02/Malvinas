@@ -1,0 +1,66 @@
+[gd_scene format=4 uid="uid://citsulxf3xf0x"]
+
+[ext_resource type="PackedScene" uid="uid://cr7qucm5frb7s" path="res://scenes/player/player.tscn" id="1"]
+[ext_resource type="TileSet" uid="uid://b4s5iwn2hhxn4" path="res://assets/tilesets/lpc_battlefield/campo_batalla_tileset.tres" id="2"]
+[ext_resource type="Script" uid="uid://bnsfmtdjbe8l8" path="res://scenes/world/room.gd" id="3"]
+[ext_resource type="PackedScene" uid="uid://blnomdluqg8o5" path="res://scenes/ui/darkness.tscn" id="4"]
+[ext_resource type="PackedScene" uid="uid://b0avj8ips1d5w" path="res://scenes/ui/inventory.tscn" id="5"]
+[ext_resource type="PackedScene" uid="uid://cfog0hambre1" path="res://scenes/world/fog.tscn" id="6"]
+[ext_resource type="TileSet" uid="uid://cnut542nmat5g" path="res://assets/tilesets/walls/walls_tileset.tres" id="7"]
+[ext_resource type="TileSet" uid="uid://cppaggpt8oj02" path="res://assets/tilesets/objetos/objetos_tileset.tres" id="8"]
+[ext_resource type="Shader" uid="uid://xpmp7o34fak5" path="res://scenes/world/wind_grass.gdshader" id="9"]
+[ext_resource type="Texture2D" uid="uid://dlsn4spv244qp" path="res://assets/sprites/vehiculos/pucara/pucara.png" id="10_qfq3b"]
+
+[sub_resource type="ShaderMaterial" id="wind_grass_mat"]
+shader = ExtResource("9")
+shader_parameter/speed = 1.0
+shader_parameter/strength = 1.5
+shader_parameter/scale = 0.03
+
+[node name="Area1" type="Node2D" unique_id=113841640]
+script = ExtResource("3")
+
+[node name="Backdrop" type="ColorRect" parent="." unique_id=312023821]
+offset_left = -1.0
+offset_top = 3.0
+offset_right = 1343.0
+offset_bottom = 835.0
+color = Color(0.08, 0.08, 0.09, 1)
+
+[node name="Ground" type="TileMapLayer" parent="." unique_id=104691938]
+material = SubResource("wind_grass_mat")
+rotation = -0.020183265
+scale = Vector2(1.6895257, 1.1991028)
+tile_map_data = PackedByteArray("AAAAAAAADgAeAA4AAAAAAAEADgAeAA8AAAABAAAADgAfAA4AAAABAAEADgAfAA8AAAAHAAsADwADAA8AAAAIAAsADwAvAA8AAAAAAAoADwAgAAAAAAABAAoADwAhAAAAAAACAAoADwAiAAAAAAADAAoADwAjAAAAAAAAAAsADwACAA8AAAABAAsADwADAA8AAAACAAsADwABAA8AAAADAAsADwACAA8AAAAEAAsADwADAA8AAAAFAAsADwABAA8AAAAGAAsADwACAA8AAAA=")
+tile_set = ExtResource("2")
+
+[node name="Detalle" type="TileMapLayer" parent="." unique_id=1338169559]
+tile_map_data = PackedByteArray("AAD4/wMABAAAAAAAAAD6/wMABAAAAAAAAAD1/wMABAAAAAAAAAA=")
+tile_set = ExtResource("2")
+
+[node name="Walls" type="TileMapLayer" parent="." unique_id=175060776]
+y_sort_enabled = true
+tile_set = ExtResource("7")
+
+[node name="Objetos" type="TileMapLayer" parent="." unique_id=926065694]
+y_sort_enabled = true
+tile_set = ExtResource("8")
+
+[node name="SpawnOeste" type="Marker2D" parent="." unique_id=1398412938]
+position = Vector2(638, -156)
+
+[node name="Player" parent="." unique_id=35574948 instance=ExtResource("1")]
+position = Vector2(-402, 1060)
+
+[node name="Fog" parent="." unique_id=600246288 instance=ExtResource("6")]
+visible = false
+
+[node name="Darkness" parent="." unique_id=1893691022 instance=ExtResource("4")]
+visible = false
+
+[node name="Inventory" parent="." unique_id=742269443 instance=ExtResource("5")]
+visible = false
+
+[node name="Pucara" type="Sprite2D" parent="." unique_id=2046096696]
+position = Vector2(211, 107)
+texture = ExtResource("10_qfq3b")

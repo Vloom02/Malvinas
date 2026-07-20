@@ -22,9 +22,11 @@ signal hallucination(type: String)  # "whisper", "shadow", "screen"
 signal companion_changed           # se reclutó o perdió un companion
 signal status_effect_changed       # efecto de estado cambió
 signal weapon_changed              # se equipó/desequipó un arma
+signal ruido_mundo(pos: Vector2, radio: float)  # algo hizo ruido (atrae patrullas)
 
 # --- Topes ---
 const HUNGER_MAX := 100
+const HUNGER_LOW := 25  # umbral de "hambre seria" (cuarto de la barra)
 const SANITY_MAX := 100
 var PLAYER_HP_MAX: int = 100
 
@@ -55,6 +57,13 @@ func get_player_damage(roll_variance: bool = false) -> int:
 	if equipped_weapon != null:
 		dmg = equipped_weapon.damage + int(skill_mods.get("damage", 0))
 		var_range = equipped_weapon.variance
+		for acc in equipped_accessories():
+			dmg += acc.damage_mod
+	# Melee mellado: la condición baja el filo (las de fuego se traban; estas
+	# cortan cada vez menos). A condición 0 pega la mitad.
+	if equipped_weapon != null and not equipped_weapon.is_firearm():
+		var st := _ensure_weapon_state(equipped_weapon.id)
+		dmg = maxi(1, int(dmg * (0.5 + 0.5 * float(st["condition"]) / 100.0)))
 	if roll_variance and var_range > 0:
 		dmg += randi_range(-var_range, var_range)
 		dmg = maxi(1, dmg)
@@ -65,6 +74,8 @@ func get_pulse_mod() -> int:
 	var mod := 0
 	if equipped_weapon != null:
 		mod += equipped_weapon.pulse_mod
+		for acc in equipped_accessories():
+			mod += acc.pulse_mod
 	mod += int(skill_mods.get("pulse", 0))
 	return mod
 
@@ -73,6 +84,8 @@ func get_dodge_mod() -> int:
 	var mod := 0
 	if equipped_weapon != null:
 		mod += equipped_weapon.dodge_mod
+		for acc in equipped_accessories():
+			mod += acc.dodge_mod
 	mod += int(skill_mods.get("dodge", 0))
 	return mod
 
@@ -113,8 +126,244 @@ func get_damage_taken_mult() -> float:
 func equip_weapon(weapon: WeaponData) -> WeaponData:
 	var old := equipped_weapon
 	equipped_weapon = weapon
+	if weapon != null:
+		var st := _ensure_weapon_state(weapon.id)
+		if not st.has("ammo"):
+			st["ammo"] = weapon.mag_size  # el arma aparece cargada la primera vez
 	weapon_changed.emit()
 	return old
+
+# --- Estado runtime de las armas (condición/barro/mojado/accesorios) ---
+## Por arma (id → dict). Persiste en el save. El WeaponData queda inmutable;
+## el estado que cambia vive acá (approach A del spec de armas).
+var weapon_states: Dictionary = {}
+
+## Umbrales de estado visual sucio (barro/mojado).
+const MUD_DIRTY := 45
+const WET_DIRTY := 45
+
+## Devuelve (creando si hace falta) el estado runtime de un arma.
+func _ensure_weapon_state(weapon_id: String) -> Dictionary:
+	if not weapon_states.has(weapon_id):
+		weapon_states[weapon_id] = {
+			"condition": 100, "mud": 0, "wet": 0, "accessories": {},
+		}
+	return weapon_states[weapon_id]
+
+## Estado del arma equipada (dict vacío si no hay arma).
+func equipped_weapon_state() -> Dictionary:
+	if equipped_weapon == null:
+		return {}
+	return _ensure_weapon_state(equipped_weapon.id)
+
+## Devuelve el AccessoryData (tipado como Resource para no depender del registro
+## global de la clase). Null si no existe.
+func _load_accessory(acc_id: String) -> Resource:
+	var path := "res://data/items/%s.tres" % acc_id
+	if ResourceLoader.exists(path):
+		return load(path)
+	return null
+
+## Accesorios acoplados al arma equipada (Array[AccessoryData]).
+func equipped_accessories() -> Array:
+	var out: Array = []
+	var st := equipped_weapon_state()
+	if st.is_empty():
+		return out
+	for slot in st["accessories"]:
+		var acc := _load_accessory(str(st["accessories"][slot]))
+		if acc != null:
+			out.append(acc)
+	return out
+
+## Acopla un accesorio al arma equipada (en su slot). Devuelve false si el arma
+## no acepta esa ranura o no hay arma.
+func attach_accessory(acc: Resource) -> bool:
+	if equipped_weapon == null or acc == null:
+		return false
+	if not equipped_weapon.accepted_slots.has(acc.slot_type):
+		return false
+	var st := equipped_weapon_state()
+	st["accessories"][acc.slot_type] = acc.id
+	weapon_changed.emit()
+	return true
+
+## Estado visual del arma equipada: "" (limpia), "barro" o "mojado".
+func weapon_grime_state() -> String:
+	var st := equipped_weapon_state()
+	if st.is_empty():
+		return ""
+	if int(st["mud"]) >= MUD_DIRTY:
+		return "barro"
+	if int(st["wet"]) >= WET_DIRTY:
+		return "mojado"
+	return ""
+
+## Acumula barro/mojado en el arma equipada (lo llama el mundo según el ambiente).
+func add_weapon_grime(mud: int, wet: int) -> void:
+	var st := equipped_weapon_state()
+	if st.is_empty():
+		return
+	st["mud"] = clampi(int(st["mud"]) + mud, 0, 100)
+	st["wet"] = clampi(int(st["wet"]) + wet, 0, 100)
+
+## Limpia/mantiene el arma equipada (kit de limpieza en mesa de crafteo).
+func clean_weapon() -> void:
+	var st := equipped_weapon_state()
+	if st.is_empty():
+		return
+	st["mud"] = 0
+	st["wet"] = 0
+	st["condition"] = 100
+	st["jammed"] = false  # limpiarla también la destraba
+	weapon_changed.emit()
+
+## Suma de reliability_mod de los accesorios equipados.
+func _accessory_reliability() -> float:
+	var r := 0.0
+	for acc in equipped_accessories():
+		r += acc.reliability_mod
+	return r
+
+## Chance (0-0.5) de que el arma de fuego equipada se trabe en este disparo.
+## La traba la causa la SUCIEDAD (barro/humedad/frío/desgaste), no el arma en
+## sí: un arma limpia casi nunca se traba (<1%); una embarrada, seguido.
+## La confiabilidad del arma escala cuánto le pega la suciedad (FAL vs barro).
+func weapon_jam_chance() -> float:
+	var w := equipped_weapon
+	if w == null or not w.is_firearm():
+		return 0.0
+	var st := equipped_weapon_state()
+	var dirt := (float(st["mud"]) / 100.0) * w.mud_sensitivity \
+		+ (float(st["wet"]) / 100.0) * 0.5 \
+		+ (float(cold) / 100.0) * 0.3 \
+		+ (float(100 - int(st["condition"])) / 100.0) * 0.6
+	var fragility := (1.0 - clampf(w.reliability + _accessory_reliability(), 0.0, 1.0)) * 2.5
+	return clampf(fragility * clampf(dirt, 0.003, 1.2), 0.0, 0.3)
+
+## Gracia post-destrabe: recién destrabada, el arma no vuelve a trabarse
+## por un rato (pedido de Alan: se trababa de vuelta al toque).
+const JAM_GRACE_MS := 12000
+var _last_unjam_ms: int = -100000
+
+## Tira si el arma se traba. El uso desgasta la condición de a poco
+## (~1 punto cada 7 disparos; con fuego sostenido no se pulveriza).
+func roll_weapon_jam() -> bool:
+	var st := equipped_weapon_state()
+	if not st.is_empty() and randf() < 0.15:
+		st["condition"] = clampi(int(st["condition"]) - 1, 0, 100)
+	if Time.get_ticks_msec() - _last_unjam_ms < JAM_GRACE_MS:
+		return false
+	return randf() < weapon_jam_chance()
+
+## Traba persistente del arma equipada (en el mapa se destraba manteniendo R).
+func weapon_jammed() -> bool:
+	var st := equipped_weapon_state()
+	return not st.is_empty() and bool(st.get("jammed", false))
+
+func set_weapon_jammed(v: bool) -> void:
+	var st := equipped_weapon_state()
+	if not st.is_empty():
+		st["jammed"] = v
+	if not v:
+		_last_unjam_ms = Time.get_ticks_msec()
+
+## True si el arma equipada puede disparar de pie (las con trípode necesitan
+## estar prono/apoyado; ese chequeo lo hace el player con su estado de postura).
+func weapon_needs_mount() -> bool:
+	return equipped_weapon != null and equipped_weapon.needs_mount
+
+# --- Munición: balas en el arma + cargadores/cintas/cartuchos en la mochila ---
+## Balas sueltas por calibre (para llenar cargadores desde el inventario).
+const AMMO_BULLETS := {"7.62": "balas_762", "9mm": "balas_9mm", "cartucho": "cartuchos_12"}
+
+## Item de cargador/cinta LLENO que usa el arma (la escopeta no usa: carga
+## cartuchos sueltos directo al tubo).
+func _mag_item_id(w: WeaponData) -> String:
+	if w.id == "fn_mag":
+		return "cinta_762"
+	match w.ammo_type:
+		"7.62": return "cargador_762"
+		"9mm": return "cargador_9mm"
+	return ""
+
+## Balas en el arma equipada (-1 = no es arma de fuego).
+func weapon_ammo() -> int:
+	if equipped_weapon == null or not equipped_weapon.is_firearm():
+		return -1
+	return int(_ensure_weapon_state(equipped_weapon.id).get("ammo", 0))
+
+## Gasta una bala del arma equipada (la llama el player al disparar).
+func spend_bullet() -> void:
+	var st := equipped_weapon_state()
+	if not st.is_empty():
+		st["ammo"] = maxi(0, int(st.get("ammo", 0)) - 1)
+
+## Cargadores/cintas llenos (o cartuchos) que quedan para el arma equipada.
+func ammo_reserve_count() -> int:
+	var w := equipped_weapon
+	if w == null or not w.is_firearm():
+		return 0
+	var iid := "cartuchos_12" if w.ammo_type == "cartucho" else _mag_item_id(w)
+	var it: ItemData = items_by_id.get(iid)
+	return int(inventory.get(it, 0)) if it != null else 0
+
+## Recarga (tecla R). Consume un cargador/cinta LLENO y devuelve el vacío;
+## las balas que quedaban en el arma vuelven como balas sueltas. La escopeta
+## carga cartuchos sueltos hasta llenar el tubo. Devuelve mensaje de error
+## para mostrar ("" = recargó bien).
+func reload_weapon() -> String:
+	var w := equipped_weapon
+	if w == null or not w.is_firearm():
+		return ""
+	var st := _ensure_weapon_state(w.id)
+	var cur := int(st.get("ammo", 0))
+	if cur >= w.mag_size:
+		return "El arma ya está cargada."
+	if w.ammo_type == "cartucho":
+		var it: ItemData = items_by_id.get("cartuchos_12")
+		var have := int(inventory.get(it, 0))
+		if have <= 0:
+			return "No te quedan cartuchos."
+		var carga := mini(w.mag_size - cur, have)
+		inventory[it] -= carga
+		if inventory[it] <= 0:
+			inventory.erase(it)
+		st["ammo"] = cur + carga
+		inventory_changed.emit()
+		return ""
+	var mag_id := _mag_item_id(w)
+	var mag: ItemData = items_by_id.get(mag_id)
+	if mag == null or int(inventory.get(mag, 0)) <= 0:
+		return "No te quedan %s llenos." % ("cintas" if w.id == "fn_mag" else "cargadores")
+	inventory[mag] -= 1
+	if inventory[mag] <= 0:
+		inventory.erase(mag)
+	# Las balas que quedaban vuelven sueltas al bolsillo.
+	if cur > 0:
+		var bullets: ItemData = items_by_id.get(AMMO_BULLETS.get(w.ammo_type, ""))
+		if bullets != null:
+			_inv.add_item(bullets, cur)
+	# El cargador/cinta vacío vuelve al inventario para rellenarlo después.
+	var empty_id := mag_id + ("_vacia" if w.id == "fn_mag" else "_vacio")
+	_inv.add_item(items_by_id[empty_id], 1)
+	st["ammo"] = w.mag_size
+	inventory_changed.emit()
+	return ""
+
+## Tasa de barro/mojado que impregna el arma por cada paso, según el ambiente
+## del mapa actual. La setea room.gd en _ready (0 = terreno seco/interior).
+var env_mud_rate: int = 0
+var env_wet_rate: int = 0
+## Frío del ambiente (0 = interior abrigado, 5 = páramo helado de noche).
+## La setea room.gd. El frío del CUERPO sube hasta env_cold_rate*20.
+var env_cold_rate: int = 0
+
+## Acumuladores del tick de cuerpo realista (ver _tick_status).
+var _cold_accum: int = 0
+var _hunger_tick: int = 0
+var _inf_tick: int = 0
+var _last_step_ms: int = 0
 
 ## Aplica un libro/informe. Devuelve true si se aplicó.
 func apply_skill_book(book: SkillBook) -> bool:
@@ -136,8 +385,12 @@ func apply_skill_book(book: SkillBook) -> bool:
 
 # --- Estado de combate ---
 var pending_enemy_path: String = ""
-var return_scene_path: String = "res://scenes/maps/nivel1_trinchera.tscn"
+var return_scene_path: String = "res://scenes/maps/sandbox.tscn"
 var _madness_triggered: bool = false
+## Daño/sangrado infligido al enemigo ANTES del combate (al dispararle en el
+## mapa). El combate los consume en _ready (resta HP del torso, suma sangrado).
+var pending_pre_damage: int = 0
+var pending_enemy_bleed: int = 0
 ## True mientras estás peleando: congela eventos del mundo, alucinaciones y
 ## sangrado (que solo avanza al caminar). Evita que aparezcan peleas encima
 ## de otra pelea.
@@ -212,6 +465,12 @@ const AMBIENT_LIGHT_MAP: Dictionary = {
 	"res://scenes/maps/nivel1_pozo.tscn": 30,
 	"res://scenes/maps/nivel1_campo.tscn": 90,
 	"res://scenes/maps/naval_barco.tscn": 20,
+	"res://scenes/maps/malvinas_mapa.tscn": 85,
+	"res://scenes/maps/area_costera.tscn": 75,
+	"res://scenes/maps/nivel_campamento.tscn": 100,
+	"res://scenes/maps/nivel_trincheras.tscn": 65,
+	"res://scenes/maps/nivel_jefe.tscn": 55,
+	"res://scenes/maps/sandbox.tscn": 85,
 }
 
 # --- Propiedades de luz ---
@@ -231,10 +490,67 @@ var _world_events: WorldEvents
 var _narrative: NarrativeManager
 var _map_manager: MapManager
 
+# --- Reloj del mundo (día/noche) y calendario de campaña ---
+## Un día completo del juego dura este tiempo real (segundos).
+const DAY_LENGTH_SEC := 1200.0
+## La campaña arranca el 1 de junio de 1982 y termina el 14 (la rendición).
+const CAMPAIGN_DAYS := 14
+## Hora del día (0-24). Arranca a media mañana.
+var time_hours: float = 10.0
+## Día de junio (1..14). Al pasar el 14: rendición, fin de la campaña.
+var day: int = 1
+var _campaign_over: bool = false
+signal night_changed(night: bool)
+
+func is_night() -> bool:
+	return time_hours >= 21.0 or time_hours < 6.0
+
+## Avanza el reloj N horas manejando el cambio de día (dormir, estaqueo).
+func advance_hours(h: float) -> void:
+	var t := time_hours + h
+	while t >= 24.0:
+		t -= 24.0
+		_advance_day()
+	time_hours = t
+
+## Nuevo día: la guerra escala (más peligro) y se acerca el 14 de junio.
+func _advance_day() -> void:
+	day += 1
+	danger = mini(danger + 1, 10)
+	if day > CAMPAIGN_DAYS:
+		_campaign_end()
+
+func _campaign_end() -> void:
+	if _campaign_over or _dead:
+		return
+	_campaign_over = true
+	add_journal("14 de junio de 1982: Puerto Argentino se rinde. La guerra terminó.")
+	Dialogue.say("14 de junio. Un silencio raro baja de los montes:\nPuerto Argentino se rindió. La guerra terminó.\n\n[ FIN: sobreviviste hasta la rendición ]")
+	await Dialogue.finished
+	get_tree().change_scene_to_file("res://scenes/ui/title.tscn")
+
+## Castigo histórico de Malvinas: horas estaqueado a la intemperie
+## (te agarraron carneando una oveja o robando el depósito).
+func estaquear() -> void:
+	advance_hours(6.0)
+	cold = clampi(cold + 40, 0, 100)
+	sanity = maxi(0, sanity - 15)
+	reputation = maxi(0, reputation - 10)
+	body_changed.emit()
+
+## Reputación con el batallón (0-100): baja al robar/carnear si te ven,
+## sube al compartir. Afecta los precios de la intendencia (ver buy_item).
+var reputation: int = 50
+
 func effective_light() -> int:
+	# De noche el ambiente cae fuerte (los enemigos ya se vuelven más rápidos
+	# con poca luz vía effective_light, así que la noche es peligrosa gratis).
+	var amb := ambient_light
+	if is_night():
+		amb = int(amb * 0.45)
 	if linterna_on and light_battery > 0:
-		return maxi(ambient_light, 40)
-	return ambient_light
+		return maxi(amb, 40)
+	return amb
 
 # --- Setters con señales ---
 var hunger: int = HUNGER_MAX:
@@ -332,12 +648,50 @@ func craft(recipe: CraftRecipe) -> bool:
 		inventory_changed.emit()
 	return ok
 
+## Recetas de mejoras de arma (se fabrican y montan en la mesa de crafteo).
+func get_accessory_recipes() -> Array:
+	return _inv.accessory_recipes if _inv else []
+
+func accessory_recipe_status(recipe: CraftRecipe) -> String:
+	return _inv.accessory_recipe_status(recipe, self) if _inv else "sin_arma"
+
+func craft_accessory(recipe: CraftRecipe) -> bool:
+	var ok := _inv.craft_accessory(recipe, self) if _inv else false
+	if ok:
+		inventory_changed.emit()
+	return ok
+
 func buy_item(item: ItemData) -> bool:
-	var ok := _inv.buy_item(item) if _inv else false
+	# La reputación con el batallón mueve los precios de la intendencia:
+	# rep 100 = 20% más barato, rep 0 = 60% más caro.
+	var mult := 1.6 - reputation * 0.008
+	var ok := _inv.buy_item(item, mult) if _inv else false
 	if ok:
 		inventory_changed.emit()
 		money_changed.emit()
 	return ok
+
+## Clase según el prólogo jugado (estilo Trench Face): bono chico + ítems.
+## La aplica room.gd la primera vez que pisás cada mapa de prólogo.
+func apply_origin(origin: String) -> void:
+	if has_flag("origen_aplicado"):
+		return
+	set_flag("origen_aplicado")
+	set_flag("origen_" + origin)
+	match origin:
+		"infanteria":
+			skill_mods["damage"] += 1
+			add_item(items_by_id["venda"], 2)
+			Dialogue.say("Sos de infantería: pegás más fuerte.\n(+1 daño, +2 vendas)")
+		"marina":
+			skill_mods["dodge"] += 1
+			add_item(items_by_id["morfina"], 1)
+			Dialogue.say("Sos de marina: el vaivén te enseñó a moverte.\n(+1 esquiva, +1 morfina)")
+		"aviacion":
+			skill_mods["perception"] += 1
+			add_item(items_by_id["pilas"], 2)
+			Dialogue.say("Sos de aviación: ves lo que otros no.\n(+1 percepción, +2 pilas)")
+	inventory_changed.emit()
 
 # --- Init ---
 
@@ -386,6 +740,17 @@ func _process(delta: float) -> void:
 		_body_timer -= 1.0
 		_tick_status()
 
+	# Reloj del mundo: la hora avanza siempre que estés jugando.
+	var was_night := is_night()
+	time_hours += delta * (24.0 / DAY_LENGTH_SEC)
+	if time_hours >= 24.0:
+		time_hours -= 24.0
+		_advance_day()
+	if was_night != is_night():
+		night_changed.emit(is_night())
+		if not in_combat:
+			Dialogue.say("Cae la noche. Se ve poco y nada." if is_night() else "Amanece sobre la turba. %d de junio." % day)
+
 	if linterna_on and light_battery > 0:
 		light_battery = maxf(0.0, light_battery - delta * 0.5)
 		if light_battery <= 0:
@@ -424,12 +789,39 @@ func _in_gameplay() -> bool:
 
 func _tick_status() -> void:
 	var changed := false
-	if cold > 0:
+	# --- Frío realista: el cuerpo tiende a la temperatura del ambiente. ---
+	# Al aire libre (env_cold_rate>0) el frío SUBE hasta un techo según el clima;
+	# mojado pierde calor mucho más rápido; moverse abriga; con hambre no hay
+	# energía para generar calor. Bajo techo (env_cold_rate=0) entrás en calor.
+	var cold_ceiling := env_cold_rate * 20  # 0..100
+	if cold < cold_ceiling:
+		_cold_accum += 1 + env_wet_rate  # humedad = pérdida de calor acelerada
+		if hunger < HUNGER_LOW:
+			_cold_accum += 1  # sin combustible no hay calor corporal
+		if Time.get_ticks_msec() - _last_step_ms < 3000:
+			_cold_accum -= 1  # caminar/correr genera calor
+		if _cold_accum >= 4:
+			_cold_accum = 0
+			cold += 1
+			changed = true
+	elif cold > cold_ceiling:
 		cold -= 1
 		changed = true
-	if bleeding > 0 and infection < 100:
-		infection += 1
+	# --- Metabolismo basal: el hambre avanza aunque estés quieto. ---
+	# Tiritar de frío quema calorías más rápido.
+	_hunger_tick += 1
+	var hunger_interval := 6 if cold >= 50 else 10
+	if _hunger_tick >= hunger_interval:
+		_hunger_tick = 0
+		hunger -= 1
 		changed = true
+	# --- Infección: una herida abierta se infecta de a poco (no al instante). ---
+	if bleeding > 0 and infection < 100:
+		_inf_tick += 1
+		if _inf_tick >= 2:
+			_inf_tick = 0
+			infection += 1
+			changed = true
 	elif bleeding == 0 and infection > 0:
 		infection -= 1
 		changed = true
@@ -466,14 +858,69 @@ func _tick_status() -> void:
 
 # --- Acciones ---
 
+## Pie de trinchera (0-100): pies mojados y fríos, LA dolencia de Malvinas.
+## Acumula al caminar en terreno húmedo; frena al player (ver player.gd).
+## Cura: medias secas (a cero) o calentarse/dormir al fogón (parcial).
+var trench_foot: int = 0
+var _tf_warned: bool = false
+## Te capturaron en combate: al volver al mapa, room.gd te pone en la celda.
+var pending_capture: bool = false
+
 func spend_step() -> void:
 	hunger -= 1
+	_last_step_ms = Time.get_ticks_msec()  # moverse genera calor (ver _tick_status)
+	# El ambiente (barro/lluvia) impregna el arma equipada al caminar.
+	if env_mud_rate > 0 or env_wet_rate > 0:
+		add_weapon_grime(env_mud_rate, env_wet_rate)
+	# Pie de trinchera: caminar con los pies mojados lo acumula (peor con frío).
+	if env_wet_rate > 0:
+		trench_foot = clampi(trench_foot + env_wet_rate + (1 if cold > 50 else 0), 0, 100)
+		if trench_foot >= 80 and not _tf_warned:
+			_tf_warned = true
+			Dialogue.say("Los pies te laten dentro de las botas.\nPie de trinchera: necesitás medias secas y calor.")
+		elif trench_foot >= 100 and Dice.chance(0.2):
+			player_hp -= 1  # caminar con los pies podridos duele
 	# El sangrado solo te desangra mientras caminás (cada BLEED_STEP_INTERVAL pasos).
 	if bleeding > 0 and player_hp > 0:
 		_bleed_steps += 1
 		if _bleed_steps >= BLEED_STEP_INTERVAL:
 			_bleed_steps = 0
 			player_hp -= bleeding
+
+# --- Signos vitales (para el monitor ECG estilo Resident Evil) ---
+
+## Pulso en latidos por minuto, derivado del estado real del cuerpo:
+## perder sangre acelera el corazón (taquicardia), la hipotermia lo frena
+## (bradicardia), la infección/fiebre y el combate lo suben.
+func get_bpm() -> int:
+	var bpm := 72.0
+	bpm += bleeding * 6.0            # hemorragia → taquicardia compensatoria
+	bpm += infection * 0.2           # fiebre
+	bpm += wound_infection * 8.0
+	bpm += burns * 4.0
+	bpm -= cold * 0.3                # hipotermia → el corazón se enlentece
+	if hunger < HUNGER_LOW:
+		bpm += 8.0                   # cuerpo en estrés por inanición
+	if in_combat:
+		bpm += 18.0
+	# Taquicardia por pérdida de vida: escala en curva — a mitad de vida ya se
+	# nota, y con poca vida el corazón se DISPARA (el electro vuela).
+	var hp_frac := float(player_hp) / float(PLAYER_HP_MAX)
+	bpm += pow(1.0 - hp_frac, 2.0) * 90.0
+	if hp_frac < 0.25:
+		bpm += (0.25 - hp_frac) * 80.0  # shock: pico final
+	return clampi(int(bpm), 32, 190)
+
+## Estado global del cuerpo: "fine" / "caution" / "danger" (verde/amarillo/rojo).
+func vitals_state() -> String:
+	var hp_frac := float(player_hp) / float(PLAYER_HP_MAX)
+	if hp_frac <= 0.25 or bleeding >= 4 or cold >= 75 or infection >= 75 \
+			or wound_infection >= 2 or hunger <= 10:
+		return "danger"
+	if hp_frac <= 0.6 or bleeding > 0 or cold >= 40 or infection >= 40 \
+			or wound_infection > 0 or hunger <= HUNGER_LOW or burns > 0:
+		return "caution"
+	return "fine"
 
 func drain_sanity(amount: int) -> void:
 	sanity -= amount
@@ -486,6 +933,11 @@ func sanity_save(dc: int = 12, sanity_loss: int = 10, mod: int = 0) -> Dictionar
 
 func damage_player(amount: int) -> void:
 	player_hp -= amount
+
+## Algo hizo ruido en el mundo (disparo, culatazo). Las patrullas en rango
+## van a investigar la posición (Amnesia: The Bunker).
+func hacer_ruido(pos: Vector2, radio: float) -> void:
+	ruido_mundo.emit(pos, radio)
 
 func apply_bleeding(stacks: int) -> void:
 	bleeding = clampi(bleeding + stacks, 0, 10)
@@ -643,9 +1095,12 @@ func save_game() -> void:
 		"artillery_used": artillery_used,
 		"flags": flags, "parts": body_parts_state, "danger": danger,
 		"journal": journal, "game_mode": game_mode, "ambient_light": ambient_light,
+		"time_hours": time_hours, "trench_foot": trench_foot,
+		"day": day, "reputation": reputation,
 		"light_battery": light_battery, "camera_zoom": camera_zoom,
 		"linterna_on": linterna_on,
 		"weapon_id": equipped_weapon.id if equipped_weapon else "",
+		"weapon_states": weapon_states,
 		"skill_mods": skill_mods, "bonus_hp": bonus_hp,
 		"companion": companion.id if companion else "",
 		"companion_hp": companion_hp, "companion_hp_max": companion_hp_max,
@@ -665,6 +1120,8 @@ func load_game() -> bool:
 	in_combat = false
 	_bleed_steps = 0
 	_hallu_timer = 0.0
+	pending_pre_damage = 0
+	pending_enemy_bleed = 0
 	bleeding = int(data.get("bleeding", 0))
 	cold = int(data.get("cold", 0))
 	infection = int(data.get("infection", 0))
@@ -689,14 +1146,23 @@ func load_game() -> bool:
 	danger = int(data.get("danger", 0))
 	game_mode = str(data.get("game_mode", "cabeza"))
 	ambient_light = int(data.get("ambient_light", 80))
+	time_hours = float(data.get("time_hours", 10.0))
+	trench_foot = int(data.get("trench_foot", 0))
+	_tf_warned = trench_foot >= 80
+	day = int(data.get("day", 1))
+	reputation = int(data.get("reputation", 50))
+	_campaign_over = false
 	light_battery = float(data.get("light_battery", 100.0))
 	camera_zoom = float(data.get("camera_zoom", 1.0))
 	linterna_on = bool(data.get("linterna_on", false))
+	# Restaurar estado runtime de armas (condición/barro/mojado/accesorios).
+	var ws = data.get("weapon_states", {})
+	weapon_states = ws if typeof(ws) == TYPE_DICTIONARY else {}
 	# Restaurar arma equipada.
 	var weapon_id := str(data.get("weapon_id", ""))
 	equipped_weapon = null
 	if weapon_id != "":
-		for item_path in ["cuchillo_trinchera", "fusil_f8", "fal_m1982", "palo_filo", "cuchillo_combate", "bayoneta", "escopeta"]:
+		for item_path in ["fal", "fap", "fn_mag", "fmk3", "browning_hp", "escopeta", "bayoneta", "cuchillo_combate", "cuchillo_trinchera", "palo_filo"]:
 			var w: WeaponData = load("res://data/items/%s.tres" % item_path) as WeaponData
 			if w != null and w.id == weapon_id:
 				equipped_weapon = w
@@ -731,7 +1197,7 @@ func load_game() -> bool:
 			if pt.has(part):
 				body_parts_state[part] = pt[part]
 	next_spawn = ""
-	_change_scene(str(data.get("scene", "res://scenes/maps/test_room.tscn")))
+	_change_scene(str(data.get("scene", "res://scenes/maps/sandbox.tscn")))
 	return true
 
 # --- Partida nueva ---
@@ -741,10 +1207,19 @@ func new_game() -> void:
 	_dead = false
 	in_combat = false
 	_bleed_steps = 0
+	pending_pre_damage = 0
+	pending_enemy_bleed = 0
 	can_save = false
 	linterna_on = false
 	light_battery = 100.0
 	ambient_light = 80
+	time_hours = 10.0
+	trench_foot = 0
+	_tf_warned = false
+	pending_capture = false
+	day = 1
+	reputation = 50
+	_campaign_over = false
 	camera_zoom = 1.0
 	_hallu_timer = 0.0
 	flags.clear()
@@ -766,6 +1241,7 @@ func new_game() -> void:
 	companion_hp = 0
 	companion_hp_max = 0
 	equipped_weapon = null
+	weapon_states.clear()
 	skill_mods = {
 		"pulse": 0, "dodge": 0, "force": 0,
 		"perception": 0, "stealth": 0, "damage": 0,
@@ -786,10 +1262,18 @@ func new_game() -> void:
 
 # --- Puente de combate ---
 
+## Posición del jugador donde arrancó el combate, para volver ahí (no al spawn).
+var combat_return_pos: Vector2 = Vector2.ZERO
+var returning_from_combat: bool = false
+
 func start_combat(enemy_path: String, from_scene: String) -> void:
 	in_combat = true
 	pending_enemy_path = enemy_path
 	return_scene_path = from_scene
+	# Recordar dónde estaba el jugador para volver al mismo lugar tras la pelea.
+	var player := get_tree().get_first_node_in_group("player")
+	if player != null:
+		combat_return_pos = player.global_position
 	_change_scene("res://scenes/combat/combat.tscn")
 
 func end_combat() -> void:
@@ -798,11 +1282,13 @@ func end_combat() -> void:
 		set_flag("dead_" + pending_kill_id)
 		pending_kill_id = ""
 	advance_danger(1)
+	returning_from_combat = true
 	_change_scene(return_scene_path)
 
 func flee_combat() -> void:
 	in_combat = false
 	pending_kill_id = ""
+	returning_from_combat = true
 	_change_scene(return_scene_path)
 
 func game_over() -> void:

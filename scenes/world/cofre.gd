@@ -43,9 +43,15 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	for res in items:
 		if res is WeaponData:
+			# Al inventario (no equipar de una: con varias armas se pisarían y
+			# solo quedaría la última). Si no tenés arma, se equipa la primera.
 			var w: WeaponData = res
-			GameState.equip_weapon(w)
-			lines.append("• %s (Daño: %d) — equipada." % [w.display_name, w.damage])
+			GameState.inventory[w] = maxi(1, int(GameState.inventory.get(w, 0)))
+			if GameState.equipped_weapon == null:
+				GameState.equip_weapon(w)
+				lines.append("• %s (Daño: %d) — equipada." % [w.display_name, w.damage])
+			else:
+				lines.append("• %s (Daño: %d)" % [w.display_name, w.damage])
 			any_item = true
 		elif res is SkillBook:
 			var b: SkillBook = res
@@ -65,4 +71,5 @@ func _unhandled_input(event: InputEvent) -> void:
 	_opened = true
 	if pickup_id != "":
 		GameState.set_flag("taken_" + pickup_id)
+	GameState.inventory_changed.emit()
 	Dialogue.say("\n".join(lines))

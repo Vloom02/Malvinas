@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CraftRecipe" format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/craft_recipe.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+result_id = "mira_telescopica"
+result_name = "Mira telescópica"
+result_qty = 1
+ingredients = {
+"tablilla": 1,
+"alcohol": 1
+}

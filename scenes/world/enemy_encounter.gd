@@ -26,6 +26,19 @@ class_name EnemyEncounter
 var _triggered: bool = false
 var _visible_to_sanity: bool = true
 var _fading: bool = false
+## Daño/sangrado acumulado por disparos en el mapa (antes del combate).
+var _world_damage: int = 0
+var _world_bleed: int = 0
+
+## Lo llama el player al dispararle. Acumula daño y hace parpadear el sprite.
+func hit_from_world(dmg: int, bleed: int = 0) -> void:
+	_world_damage += dmg
+	_world_bleed += bleed
+	if is_instance_valid(get_node_or_null("Sprite2D")):
+		$Sprite2D.modulate = Color(1.7, 0.5, 0.5, 1.0)
+		var tw := create_tween()
+		tw.tween_property($Sprite2D, "modulate", Color(1, 1, 1, 1), 0.25)
+	AudioManager.play_sfx("res://assets/audio/hit.wav", -6.0)
 
 func _ready() -> void:
 	if unique_id != "" and GameState.has_flag("dead_" + unique_id):
@@ -127,5 +140,8 @@ func _offer_stealth_or_combat() -> void:
 
 func _start_combat() -> void:
 	GameState.pending_kill_id = unique_id
+	# Pasar el daño de los disparos del mapa al combate.
+	GameState.pending_pre_damage = _world_damage
+	GameState.pending_enemy_bleed = _world_bleed
 	var from_scene := get_tree().current_scene.scene_file_path
 	GameState.start_combat(enemy_path, from_scene)

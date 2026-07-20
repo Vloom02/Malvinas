@@ -1,0 +1,15 @@
+[gd_scene format=3 uid="uid://cqo6gj7yhrk3w"]
+
+[ext_resource type="Script" uid="uid://djgh4f584pwiw" path="res://scenes/world/prop.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://57vbpd3obj2w" path="res://assets/sprites/vehiculos/panhard_aml90/rotations/south.png" id="2"]
+
+[node name="PanhardAML90" type="StaticBody2D" unique_id=488588649]
+script = ExtResource("1")
+texture = ExtResource("2")
+collision_size = Vector2(64, 40)
+collision_offset = Vector2(0, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1088905887]
+texture = ExtResource("2")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1926637370]

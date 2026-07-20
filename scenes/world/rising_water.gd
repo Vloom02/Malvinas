@@ -9,6 +9,9 @@ extends Node2D
 @export var start_level: float = 360.0
 ## Hasta dónde sube como máximo (Y más chico = más arriba).
 @export var max_level: float = 70.0
+## Modo MAREA (playa del desembarco): en vez de subir siempre, sube de noche
+## y baja de día hasta el nivel inicial (usa el reloj de GameState).
+@export var tide_mode: bool = false
 
 @onready var water: ColorRect = $Water
 
@@ -20,7 +23,10 @@ func _ready() -> void:
 	water.offset_top = _level
 
 func _process(delta: float) -> void:
-	_level = maxf(max_level, _level - rise_speed * delta)
+	if tide_mode and not GameState.is_night():
+		_level = minf(start_level, _level + rise_speed * delta)  # baja la marea
+	else:
+		_level = maxf(max_level, _level - rise_speed * delta)
 	water.offset_top = _level
 
 	var p := get_tree().get_first_node_in_group("player")

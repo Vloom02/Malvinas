@@ -22,8 +22,8 @@ func _process(_delta: float) -> void:
 	var sanity_t := float(GameState.sanity) / float(GameState.SANITY_MAX)
 	var light_t := float(GameState.effective_light()) / 100.0
 	# Sin luz: el círculo se cierra aunque tengas cordura.
-	var min_r := lerpf(0.08, 0.13, light_t)
-	var max_r := lerpf(0.13, 0.30, sanity_t)
+	var min_r := lerpf(0.15, 0.55, light_t)
+	var max_r := lerpf(0.20, 0.70, sanity_t)
 	var radius := minf(min_r, max_r)
 	dark.material.set_shader_parameter("radius", radius)
 
@@ -32,7 +32,7 @@ func _process(_delta: float) -> void:
 		var player := get_tree().get_first_node_in_group("player")
 		if player != null and "facing_vector" in player:
 			dark.material.set_shader_parameter("beam_dir", player.facing_vector)
-		dark.material.set_shader_parameter("beam_len", 0.28)
+		dark.material.set_shader_parameter("beam_len", 0.40)
 	else:
 		dark.material.set_shader_parameter("beam_len", 0.0)
 

@@ -1,6 +1,12 @@
 [gd_scene format=3 uid="uid://c8nsv7m3lwbec"]
 
 [ext_resource type="Script" path="res://scenes/ui/transition.gd" id="1"]
+[ext_resource type="Shader" path="res://scenes/ui/melt.gdshader" id="2"]
+
+[sub_resource type="ShaderMaterial" id="meltmat"]
+shader = ExtResource("2")
+shader_parameter/progress = 1.0
+shader_parameter/columns = 80.0
 
 [node name="Transition" type="CanvasLayer"]
 process_mode = 3
@@ -11,4 +17,11 @@ script = ExtResource("1")
 anchor_right = 1.0
 anchor_bottom = 1.0
 color = Color(0, 0, 0, 0)
+mouse_filter = 2
+
+[node name="Melt" type="ColorRect" parent="."]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+material = SubResource("meltmat")
 mouse_filter = 2

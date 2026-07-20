@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "fal"
+display_name = "FN FAL 50.61"
+description = "Fusil Automático Liviano de culata plegable. El arma reglamentaria del conscripto. Pesado, pero confiable."
+damage = 20
+pulse_mod = 1
+dodge_mod = 0
+force_mod = 0
+perception_mod = 1
+weapon_type = "fusil"
+one_handed = false
+weight = 3
+attack_text = "Descargás una ráfaga sobre %s."
+find_text = "Un FN FAL 50.61. La culata plegable está gastada de tanto uso."
+status_effect = "bleed"
+status_chance = 0.25
+variance = 3
+mag_size = 20
+fire_cooldown = 0.5
+effective_range = 160.0
+reliability = 0.9
+mud_sensitivity = 0.6
+ammo_type = "7.62"
+accepted_slots = Array[String](["optic", "magazine", "sling", "muzzle", "grip", "stock"])

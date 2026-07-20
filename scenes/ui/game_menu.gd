@@ -110,11 +110,19 @@ func _show_status() -> void:
 	_add_stat(status_panel, "HP: %d/%d" % [GameState.player_hp, GameState.PLAYER_HP_MAX])
 	_add_stat(status_panel, "Hambre: %d/100" % GameState.hunger)
 	_add_stat(status_panel, "Cordura: %d/100" % GameState.sanity)
+	var hh := int(GameState.time_hours)
+	var mm := int((GameState.time_hours - hh) * 60.0)
+	_add_stat(status_panel, "Hora: %02d:%02d%s" % [hh, mm, "  (noche)" if GameState.is_night() else ""])
+	_add_stat(status_panel, "Día: %d de junio  (la guerra termina el %d)" % [
+		mini(GameState.day, GameState.CAMPAIGN_DAYS), GameState.CAMPAIGN_DAYS])
+	_add_stat(status_panel, "Reputación con el batallón: %d/100" % GameState.reputation)
 
 	# Efectos de estado.
 	var effects: Array[String] = []
 	if GameState.bleeding > 0:
 		effects.append("Sangrado x%d" % GameState.bleeding)
+	if GameState.trench_foot >= 20:
+		effects.append("Pie de trinchera %d%%" % GameState.trench_foot)
 	if GameState.cold > 0:
 		effects.append("Frío %d" % GameState.cold)
 	if GameState.infection > 0:
@@ -274,7 +282,8 @@ func _show_items() -> void:
 	_clear(items_panel)
 
 	_add_header(items_panel, "=== INVENTARIO ===")
-	_add_stat(items_panel, "Cigarrillos: %d" % GameState.money)
+	_add_stat(items_panel, "Espacios: %d/%d   |   Cigarrillos: %d" % [
+		GameState.inventory_total(), GameState.INVENTORY_MAX, GameState.money])
 
 	# Linterna: toggle perpetuo (no se consume). Siempre visible si la tenés.
 	if GameState.inventory.has(GameState.ITEM_LINTERNA):

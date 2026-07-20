@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/item_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "cinta_762_vacia"
+display_name = "Cinta 7.62 (vacía)"
+description = "Cinta vacía. Usala para llenarla con 50 balas 7.62."
+effect = "load_mag"
+amount = 50
+price = 3

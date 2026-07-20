@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="DataDialogue" format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/data_dialogue.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+text = "El General está de pie junto al mapa. Mira la posición de las tropas con ojos duros.«Soldado, reporte. Estas son las últimas órdenes antes de salir a las trincheras.»"
+options = [{
+"text": "¿Cuál es la misión?",
+"next_path": "",
+"set_flag": "general_mission_brief",
+"journal_entry": "El General me dio las coordenadas de las trincheras. Hay que llegar a la costa.",
+"sanity_cost": 0
+}, {
+"text": "Necesito descansar.",
+"next_path": "",
+"set_flag": "",
+"journal_entry": "",
+"sanity_cost": 0
+}, {
+"text": "Estoy listo para salir.",
+"next_path": "",
+"set_flag": "general_ready",
+"journal_entry": "El General me despide. Salgo hacia las trincheras.",
+"sanity_cost": 0
+}]

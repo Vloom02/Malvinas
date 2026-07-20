@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="AccessoryData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/accessory_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "boca_canon"
+display_name = "Freno de boca"
+description = "Apagallamas en la boca del cañón. Menos fogonazo y retroceso."
+slot_type = "muzzle"
+visible = false
+damage_mod = 0
+pulse_mod = 1
+dodge_mod = 0
+reliability_mod = 0.05
+ammo_mod = 0
+pulse_mod_mounted = 0
+weight = 1

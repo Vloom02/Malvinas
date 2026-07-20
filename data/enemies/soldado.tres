@@ -17,7 +17,7 @@ body_parts = {
 }
 attack = 10
 defense = 1
-loot_table = ["racion", "venda"]
+loot_table = ["racion", "venda", "granada_f1"]
 is_boss = false
 reward = 3
 ai_normal = "attack"
@@ -25,3 +25,5 @@ ai_hurt = "burst"
 ai_desperate = "grenade"
 ai_chance_hurt = 0.3
 ai_chance_desperate = 0.6
+captures = true
+talk_type = "britanico"

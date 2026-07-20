@@ -1,0 +1,34 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/world/blanco_practica.gd" id="1"]
+
+[sub_resource type="RectangleShape2D" id="cuerpo"]
+size = Vector2(22, 34)
+
+[node name="BlancoPractica" type="StaticBody2D"]
+script = ExtResource("1")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("cuerpo")
+
+[node name="Tabla" type="Node2D" parent="."]
+
+[node name="Madera" type="Polygon2D" parent="Tabla"]
+polygon = PackedVector2Array(-11, -16, 11, -16, 11, 18, -11, 18)
+color = Color(0.55, 0.45, 0.3, 1)
+
+[node name="Silueta" type="Polygon2D" parent="Tabla"]
+polygon = PackedVector2Array(-6, -12, 6, -12, 6, 14, -6, 14)
+color = Color(0.22, 0.2, 0.18, 1)
+
+[node name="Cabeza" type="Polygon2D" parent="Tabla"]
+polygon = PackedVector2Array(-4, -16, 4, -16, 4, -10, -4, -10)
+color = Color(0.22, 0.2, 0.18, 1)
+
+[node name="Cuenta" type="Label" parent="."]
+offset_left = -46.0
+offset_top = -36.0
+offset_right = 46.0
+offset_bottom = -22.0
+horizontal_alignment = 1
+text = "impactos: 0/5"

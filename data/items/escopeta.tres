@@ -5,8 +5,8 @@
 [resource]
 script = ExtResource("1")
 id = "escopeta"
-display_name = "Escopeta de corredera"
-description = "Escopeta recortada. Devastadora a corta distancia pero lenta de recargar."
+display_name = "Escopeta (saqueada)"
+description = "Escopeta de corredera recortada, no reglamentaria — la levantaste de algún caserío. Devastadora a corta distancia pero lenta de recargar."
 damage = 25
 pulse_mod = -1
 dodge_mod = -1
@@ -20,3 +20,10 @@ find_text = "Una escopeta de corredera entre los escombros, con pocas balas."
 variance = 5
 status_effect = "bleed"
 status_chance = 0.4
+mag_size = 5
+fire_cooldown = 1.0
+effective_range = 60.0
+reliability = 0.9
+mud_sensitivity = 0.5
+ammo_type = "cartucho"
+accepted_slots = Array[String](["shell_holder", "slide_mod", "sling"])

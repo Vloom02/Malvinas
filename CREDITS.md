@@ -23,7 +23,20 @@ Capas usadas hasta ahora (autores exactos: ver `CREDITS.csv` del repo del genera
 > nombres de autor de cada una desde el `CREDITS.csv` del generador. Es requisito
 > de la licencia.
 
+## Tileset de niveles (campo_batalla_tileset.tres)
+
+`assets/tilesets/lpc_battlefield/` (dirt.png, cement.png, country.png, holemid.png,
+rock.png) viene del **LPC Base Assets** (contest Liberated Pixel Cup 2012),
+descargado de OpenGameArt: https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles
+
+**Autora: Lanea Zimmerman (AKA Sharm)** — Licencia CC-BY-SA 3.0 / GPL 3.0.
+Mismo requisito que el resto de LPC: dar crédito y compartir derivados con la
+misma licencia si se publica.
+
 ## Otros assets
 
 - Sprites pixel (conscripto, sargento, espectro, soldado, props): generados con
   **PixelLab.ai** (revisar términos de uso comercial antes de publicar).
+- El tileset viejo de piso (`assets/tilesets/trinchera/`, Barro/Roca) y
+  `assets/tilesets/walls/` también vienen de PixelLab — el piso de trinchera
+  fue reemplazado por el LPC de arriba; los walls quedan pendientes de revisar.

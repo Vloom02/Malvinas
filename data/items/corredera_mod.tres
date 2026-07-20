@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="AccessoryData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/accessory_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "corredera_mod"
+display_name = "Corredera pulida"
+description = "Corredera trabajada a mano. Cicla más suave y confiable."
+slot_type = "slide_mod"
+visible = false
+damage_mod = 0
+pulse_mod = 0
+dodge_mod = 0
+reliability_mod = 0.1
+ammo_mod = 0
+pulse_mod_mounted = 0
+weight = 1

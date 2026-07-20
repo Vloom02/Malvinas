@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/item_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "carne_cruda"
+display_name = "Carne de oveja cruda"
+description = "Recién carneada. Cruda puede caer mal: mejor asarla en un fogón."
+effect = "ration"
+amount = 18
+price = 3

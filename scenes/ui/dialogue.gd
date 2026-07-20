@@ -131,6 +131,18 @@ func _close() -> void:
 	get_tree().paused = false
 	finished.emit()
 
+## Mata cualquier diálogo pendiente o abierto SIN emitir señales: los diálogos
+## mueren donde ocurrieron (al volver al menú no deben aparecer colgados).
+func clear() -> void:
+	_queue.clear()
+	_active = false
+	_choosing = false
+	for c in options_box.get_children():
+		c.queue_free()
+	options_panel.visible = false
+	visible = false
+	get_tree().paused = false
+
 ## Pone el foco en el primer botón de opción para poder navegar con teclado.
 func _focus_first_option() -> void:
 	await get_tree().process_frame

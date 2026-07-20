@@ -1,0 +1,25 @@
+[gd_scene format=3]
+
+[sub_resource type="ParticleProcessMaterial" id="snow_mat"]
+direction = Vector3(0, 1, 0)
+spread = 15.0
+gravity = Vector3(0, 35, 0)
+initial_velocity_min = 15.0
+initial_velocity_max = 35.0
+angular_velocity_min = -30.0
+angular_velocity_max = 30.0
+scale_min = 0.6
+scale_max = 1.6
+color = Color(1, 1, 1, 0.85)
+emission_shape = 3
+emission_box_extents = Vector3(700, 1, 1)
+
+[node name="Snow" type="CanvasLayer"]
+layer = 1
+
+[node name="Particles" type="GPUParticles2D" parent="."]
+position = Vector2(640, -20)
+amount = 140
+lifetime = 7.0
+preprocess = 4.0
+process_material = SubResource("snow_mat")

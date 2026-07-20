@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "browning_hp"
+display_name = "Browning HP 9mm"
+description = "La pistola reglamentaria. Arma secundaria de una mano: poco daño, pero siempre a mano."
+damage = 10
+pulse_mod = 1
+dodge_mod = 1
+force_mod = 0
+perception_mod = 0
+weapon_type = "pistola"
+one_handed = true
+weight = 1
+attack_text = "Le metés dos tiros a %s."
+find_text = "Una Browning HP 9mm. La corredera está gastada pero funciona."
+variance = 2
+mag_size = 13
+fire_cooldown = 0.3
+effective_range = 90.0
+reliability = 0.93
+mud_sensitivity = 0.35
+ammo_type = "9mm"
+accepted_slots = Array[String](["magazine", "holster", "grip", "flashlight", "muzzle"])

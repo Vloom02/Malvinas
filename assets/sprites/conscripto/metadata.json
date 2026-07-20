@@ -3,65 +3,34 @@
   "states": [
     {
       "character": {
-        "id": "408dd90c-0924-4396-b490-5ffcaca1b98a",
-        "name": "Conscripto",
-        "prompt": "young exhausted soldier, mud-stained steel helmet, olive-green military parka coat, pale gaunt tired face, muddy boots, dark muted desaturated cold colors, gritty grimy",
+        "id": "661d69c6-9568-4b12-84c2-4eb9210e2591",
+        "name": "Young Argentine conscript soldier, 1982 Falklands War. Olive-drab green wool army uniform under a heavy field parka, dark green knitted scarf around the neck, mud-caked black combat boots. US-style M1 steel helmet, olive green, slightly dented, chin strap. Gaunt tired young face, cold-reddened cheeks, faint stubble, hollow eyes. Worn dirty mud-stained webbing gear,  Muted desaturated earthy palette, painterly pixel art with dense dithered shading, grim survival-horror tone like Fear & Hunger and Darkest Dungeon, low top-down view.",
+        "prompt": "Young Argentine conscript soldier, 1982 Falklands War. Olive-drab green wool army uniform under a heavy field parka, dark green knitted scarf around the neck, mud-caked black combat boots. US-style M1 steel helmet, olive green, slightly dented, chin strap. Gaunt tired young face, cold-reddened cheeks, faint stubble, hollow eyes. Worn dirty mud-stained webbing gear,  Muted desaturated earthy palette, painterly pixel art with dense dithered shading, grim survival-horror tone like Fear & Hunger and Darkest Dungeon, low top-down view.",
         "size": {
-          "width": 68,
-          "height": 68
+          "width": 80,
+          "height": 80
         },
         "template_id": "mannequin",
-        "directions": 4,
+        "directions": 8,
         "view": "low top-down",
-        "created_at": "2026-06-11T22:13:21.048005+00:00"
+        "created_at": "2026-06-30T22:56:27.278018+00:00"
       },
-      "folder": "Conscripto",
+      "folder": "Young_Argentine_conscript_soldier_1982_Falklands_W",
       "frames": {
         "rotations": {
-          "south": "Conscripto/rotations/south.png",
-          "west": "Conscripto/rotations/west.png",
-          "east": "Conscripto/rotations/east.png",
-          "north": "Conscripto/rotations/north.png"
+          "south": "Young_Argentine_conscript_soldier_1982_Falklands_W/rotations/south.png",
+          "south-east": "Young_Argentine_conscript_soldier_1982_Falklands_W/rotations/south-east.png",
+          "east": "Young_Argentine_conscript_soldier_1982_Falklands_W/rotations/east.png",
+          "north-east": "Young_Argentine_conscript_soldier_1982_Falklands_W/rotations/north-east.png",
+          "north": "Young_Argentine_conscript_soldier_1982_Falklands_W/rotations/north.png",
+          "north-west": "Young_Argentine_conscript_soldier_1982_Falklands_W/rotations/north-west.png",
+          "west": "Young_Argentine_conscript_soldier_1982_Falklands_W/rotations/west.png",
+          "south-west": "Young_Argentine_conscript_soldier_1982_Falklands_W/rotations/south-west.png"
         },
-        "animations": {
-          "walking": {
-            "north": [
-              "Conscripto/animations/walking/north/frame_000.png",
-              "Conscripto/animations/walking/north/frame_001.png",
-              "Conscripto/animations/walking/north/frame_002.png",
-              "Conscripto/animations/walking/north/frame_003.png",
-              "Conscripto/animations/walking/north/frame_004.png",
-              "Conscripto/animations/walking/north/frame_005.png"
-            ],
-            "west": [
-              "Conscripto/animations/walking/west/frame_000.png",
-              "Conscripto/animations/walking/west/frame_001.png",
-              "Conscripto/animations/walking/west/frame_002.png",
-              "Conscripto/animations/walking/west/frame_003.png",
-              "Conscripto/animations/walking/west/frame_004.png",
-              "Conscripto/animations/walking/west/frame_005.png"
-            ],
-            "south": [
-              "Conscripto/animations/walking/south/frame_000.png",
-              "Conscripto/animations/walking/south/frame_001.png",
-              "Conscripto/animations/walking/south/frame_002.png",
-              "Conscripto/animations/walking/south/frame_003.png",
-              "Conscripto/animations/walking/south/frame_004.png",
-              "Conscripto/animations/walking/south/frame_005.png"
-            ],
-            "east": [
-              "Conscripto/animations/walking/east/frame_000.png",
-              "Conscripto/animations/walking/east/frame_001.png",
-              "Conscripto/animations/walking/east/frame_002.png",
-              "Conscripto/animations/walking/east/frame_003.png",
-              "Conscripto/animations/walking/east/frame_004.png",
-              "Conscripto/animations/walking/east/frame_005.png"
-            ]
-          }
-        }
+        "animations": {}
       }
     }
   ],
   "export_version": "3.0",
-  "export_date": "2026-06-11T22:16:40.461023"
+  "export_date": "2026-06-30T22:59:32.880308"
 }
