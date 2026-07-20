@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "fmk3"
+display_name = "FMK-3 9mm"
+description = "Subfusil de fabricación nacional. Liviano y rápido, pero de poco alcance y daño. Munición 9mm, abundante."
+damage = 12
+pulse_mod = 1
+dodge_mod = 1
+force_mod = 0
+perception_mod = 0
+weapon_type = "subfusil"
+one_handed = false
+weight = 2
+attack_text = "Descosés a %s con una ráfaga corta."
+find_text = "Un FMK-3. Compacto, ideal para la trinchera."
+variance = 2
+mag_size = 25
+fire_cooldown = 0.15
+effective_range = 100.0
+reliability = 0.92
+mud_sensitivity = 0.4
+ammo_type = "9mm"
+accepted_slots = Array[String](["magazine", "holster", "grip", "flashlight"])

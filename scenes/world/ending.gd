@@ -2,6 +2,11 @@ extends Area2D
 ## La radio = final de la demo. Te da una ELECCIÓN y el desenlace depende de
 ## tu decisión y de lo que hiciste (flags). Después vuelve al título.
 
+## Si lo seteás, la radio está muerta hasta tener este flag (ej: "generador_on"
+## que setea la máquina generador al cargarle el bidón de gasoil).
+@export var requires_flag: String = ""
+@export_multiline var msg_sin_energia: String = "La radio está muerta. Sin energía, nadie va a escucharte."
+
 var _inside: bool = false
 
 func _ready() -> void:
@@ -22,6 +27,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		_run_ending()
 
 func _run_ending() -> void:
+	if requires_flag != "" and not GameState.has_flag(requires_flag):
+		Dialogue.say(msg_sin_energia)
+		return
 	var options := ["La verdad: estamos rodeados", "Mentís: posición asegurada"]
 	var capitán_muerto := GameState.has_flag("dead_barco_capitan")
 	if capitán_muerto:

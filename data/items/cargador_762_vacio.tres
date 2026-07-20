@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/item_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "cargador_762_vacio"
+display_name = "Cargador 7.62 (vacío)"
+description = "Cargador vacío. Usalo para llenarlo con 20 balas 7.62."
+effect = "load_mag"
+amount = 20
+price = 2

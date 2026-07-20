@@ -44,6 +44,14 @@ class_name EnemyData
 ## Cigarrillos (plata) que deja al derrotarlo.
 @export var reward: int = 3
 
+## Si te derrota, te toma PRISIONERO en vez de matarte (enemigos humanos):
+## despertás en la celda del mapa, desarmado, y hay que escapar.
+@export var captures: bool = false
+
+## Se le puede HABLAR en combate (estilo Termina): "" = no habla,
+## "britanico" = rendirse/intimidar, "desertor" = calmarlo.
+@export var talk_type: String = ""
+
 ## --- IA condicional (comportamiento según HP) ---
 ## Acción por defecto (> 50% HP).
 @export var ai_normal: String = "attack"

@@ -12,7 +12,4 @@ collision_offset = Vector2(0, 0)
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1088905887]
 texture = ExtResource("2")
 
-[node name="Sprite2D2" type="Sprite2D" parent="." unique_id=459232771]
-texture = ExtResource("2")
-
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1926637370]

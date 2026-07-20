@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/item_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "kit_limpieza"
+display_name = "Kit de limpieza"
+description = "Trapo, aceite y varilla. Saca el barro y la humedad del arma para que no se trabe."
+effect = "clean_weapon"
+amount = 0
+price = 5

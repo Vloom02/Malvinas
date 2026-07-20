@@ -1,0 +1,15 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/world/prop.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/vehiculos/jeep_mb230g/rotations/south.png" id="2"]
+
+[node name="JeepMB230G" type="StaticBody2D"]
+script = ExtResource("1")
+texture = ExtResource("2")
+collision_size = Vector2(56, 34)
+collision_offset = Vector2(0, 8)
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]

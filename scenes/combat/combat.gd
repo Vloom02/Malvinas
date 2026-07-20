@@ -51,6 +51,10 @@ var _enemy_poison: int = 0
 var _enemy_max_hp: int = 0
 var _companion_turn_used: bool = false
 var _rest_position: Vector2 = Vector2.ZERO
+## El arma de fuego puede trabarse en pleno combate (barro/humedad/frío/desgaste,
+## misma tirada que el disparo con F en el mapa). Trabada = hay que gastar un
+## turno en destrabarla desde el menú Pelear.
+var _weapon_jammed: bool = false
 
 ## Menú jerárquico (estilo RPG Maker / F&H): "main", "attack", "items", "companion".
 var _menu: String = "main"
@@ -200,13 +204,38 @@ func _show_menu(menu: String) -> void:
 	match menu:
 		"main":
 			_add_action("Pelear", _show_attack_menu)
+			if enemy.talk_type != "":
+				_add_action("Hablar", _show_talk_menu)
 			_add_action("Objetos", _show_items_menu)
 			if GameState.companion != null:
 				_add_action("Compañero", _show_companion_menu)
 			_add_action("Huir", _on_flee)
+		"talk":
+			match enemy.talk_type:
+				"britanico":
+					_add_action("Rendirte (te capturan)", _on_surrender)
+					_add_action("Intimidar (d20 Fuerza)", _on_intimidate)
+				"desertor":
+					_add_action("Calmarlo (d20)", _on_calm)
+			_add_action("« Volver", _show_main_menu)
 		"attack":
+			# Arma trabada: primero hay que destrabarla (cuesta el turno).
+			if _weapon_jammed:
+				var w: WeaponData = GameState.equipped_weapon
+				var wname: String = w.display_name if w != null else "arma"
+				_add_action("Destrabar la %s" % wname, _on_unjam)
+				_add_action("Guardia", _on_guard)
+				_add_action("« Volver", _show_main_menu)
+				_focus_first_action()
+				return
 			if GameState.blind > 0:
 				_log("No ves bien. Las tiradas tienen desventaja.")
+			# Arma de fuego sin balas: ofrecer recargar (cuesta el turno). Los
+			# ataques siguen disponibles pero pegan a culatazo (medio daño).
+			var wf: WeaponData = GameState.equipped_weapon
+			if wf != null and wf.is_firearm() and GameState.weapon_ammo() <= 0 \
+					and GameState.ammo_reserve_count() > 0:
+				_add_action("Recargar la %s" % wf.display_name, _on_combat_reload)
 			for part in parts_hp.keys():
 				var estado := "" if parts_hp[part] > 0 else " (destruida)"
 				_add_action("Atacar %s%s" % [part, estado], _on_attack_part.bind(part))
@@ -241,6 +270,9 @@ func _show_attack_menu() -> void:
 
 func _show_items_menu() -> void:
 	_show_menu("items")
+
+func _show_talk_menu() -> void:
+	_show_menu("talk")
 
 func _show_companion_menu() -> void:
 	_show_menu("companion")
@@ -359,6 +391,14 @@ func _on_attack_part(part: String) -> void:
 		_log("%s ya está destruida." % part)
 		return
 
+	# ¿Se traba el arma de fuego? (misma tirada que el disparo con F en el mapa)
+	if await _roll_combat_jam():
+		return
+
+	# Munición: cada disparo gasta una bala (aunque el enemigo esquive).
+	# Sin balas, el ataque es a culatazo: medio daño.
+	var culata := _spend_combat_bullet()
+
 	# Evasión de cabeza (30%).
 	if part == "cabeza" and Dice.chance(0.3):
 		is_player_turn = false
@@ -376,6 +416,9 @@ func _on_attack_part(part: String) -> void:
 	# Aplicar varianza del arma al daño base
 	if weapon != null and weapon.variance > 0:
 		dmg = maxi(1, dmg + randi_range(-weapon.variance, weapon.variance))
+	if culata:
+		dmg = maxi(1, int(dmg / 2.0))
+		_log("Sin balas: golpeás con la culata.")
 	var base_dmg := dmg
 
 	if _is_wounded():
@@ -441,6 +484,75 @@ func _on_attack_part(part: String) -> void:
 		_win()
 		return
 
+	await get_tree().create_timer(0.6).timeout
+	_enemy_turn()
+
+## Tira encasquillamiento antes de un ataque. Solo armas de fuego. Si se traba,
+## el turno se pierde y el arma queda trabada hasta usar "Destrabar".
+## Devuelve true si se trabó (el caller debe cortar su ataque).
+func _roll_combat_jam() -> bool:
+	var w: WeaponData = GameState.equipped_weapon
+	if w == null:
+		return false
+	if not w.is_firearm():
+		# Las armas blancas no se traban, pero se MELLAN con el uso
+		# (la condición baja el daño: ver get_player_damage).
+		var stm := GameState.equipped_weapon_state()
+		if not stm.is_empty() and randf() < 0.15:
+			stm["condition"] = clampi(int(stm["condition"]) - 1, 0, 100)
+			if int(stm["condition"]) == 20:
+				_log("El filo de la %s está hecho pedazos." % w.display_name)
+		return false
+	if not GameState.roll_weapon_jam():
+		return false
+	_weapon_jammed = true
+	is_player_turn = false
+	var grime := GameState.weapon_grime_state()
+	var reason := "el barro"
+	if grime == "mojado":
+		reason = "la humedad"
+	elif grime != "barro":
+		reason = "el frío y el desgaste"
+	AudioManager.play_sfx("res://assets/audio/disparo.wav", -18.0)  # "click" seco
+	_log("¡CLICK! La %s se traba (%s)." % [w.display_name, reason])
+	await get_tree().create_timer(0.8).timeout
+	_enemy_turn()
+	return true
+
+## Gasta una bala del arma equipada si es de fuego y tiene. Devuelve true si
+## NO había balas (el ataque sale a culatazo, medio daño).
+func _spend_combat_bullet() -> bool:
+	var w: WeaponData = GameState.equipped_weapon
+	if w == null or not w.is_firearm():
+		return false
+	if GameState.weapon_ammo() <= 0:
+		return true
+	GameState.spend_bullet()
+	return false
+
+## Recargar en combate cuesta el turno (si la recarga falla, no lo perdés).
+func _on_combat_reload() -> void:
+	if combat_over or not is_player_turn or _pending_dodge:
+		return
+	var msg := GameState.reload_weapon()
+	if msg != "":
+		_log(msg)
+		return
+	is_player_turn = false
+	AudioManager.play_sfx("res://assets/audio/disparo.wav", -24.0)  # "clac" de recarga
+	_log("Metés munición nueva en el arma.")
+	await get_tree().create_timer(0.6).timeout
+	_enemy_turn()
+
+## Destrabar el arma cuesta el turno.
+func _on_unjam() -> void:
+	if combat_over or not is_player_turn or _pending_dodge:
+		return
+	is_player_turn = false
+	_weapon_jammed = false
+	var w: WeaponData = GameState.equipped_weapon
+	var wname: String = w.display_name if w != null else "arma"
+	_log("Manoteás la corredera y expulsás el cartucho trabado de la %s." % wname)
 	await get_tree().create_timer(0.6).timeout
 	_enemy_turn()
 
@@ -797,6 +909,9 @@ func _execute_special() -> void:
 func _on_risky_attack() -> void:
 	if combat_over or not is_player_turn or _pending_dodge:
 		return
+	if await _roll_combat_jam():
+		return
+	var culata := _spend_combat_bullet()
 	is_player_turn = false
 
 	var v := Dice.versus(GameState.get_pulse_mod(), enemy.defense)
@@ -810,6 +925,9 @@ func _on_risky_attack() -> void:
 		var weapon_r: WeaponData = GameState.equipped_weapon
 		if weapon_r != null and weapon_r.variance > 0:
 			dmg = maxi(1, dmg + randi_range(-weapon_r.variance, weapon_r.variance))
+		if culata:
+			dmg = maxi(1, int(dmg / 2.0))
+			_log("Sin balas: es a culatazo limpio.")
 		dmg *= 2
 		parts_hp[part] = maxi(0, parts_hp[part] - dmg)
 		_update_part_label(part)
@@ -920,6 +1038,10 @@ func _enemy_dead() -> bool:
 
 func _refresh_player_info() -> void:
 	var s := "Tu vida: %d/%d" % [GameState.player_hp, GameState.PLAYER_HP_MAX]
+	var winfo: WeaponData = GameState.equipped_weapon
+	if winfo != null and winfo.is_firearm():
+		s += "\nMunición: %d/%d  (repuestos x%d)" % [
+			GameState.weapon_ammo(), winfo.mag_size, GameState.ammo_reserve_count()]
 	if GameState.bleeding > 0:
 		s += "    (SANGRANDO x%d)" % GameState.bleeding
 	if GameState.poison > 0:
@@ -936,6 +1058,8 @@ func _refresh_player_info() -> void:
 		s += "    (QUEMADURAS x%d)" % GameState.burns
 	if GameState.wound_infection > 0:
 		s += "    (INFECCIÓN)"
+	if GameState.trench_foot >= 60:
+		s += "    (PIE DE TRINCHERA)"
 	var enemigo_s := ""
 	if _enemy_bleed > 0:
 		enemigo_s += " Enemigo:[sangrado x%d]" % _enemy_bleed
@@ -1083,10 +1207,77 @@ func _lose() -> void:
 		return
 	_resolved = true
 	combat_over = true
+	# Enemigos humanos que capturan: en vez de morir, despertás prisionero
+	# en la celda del mapa (estilo F&H), desarmado y a media vida.
+	if enemy.captures:
+		await _captured("Un culatazo. Todo se pone negro... pero no morís.")
+		return
 	AudioManager.play_sfx(SFX_DEATH, -1.0)
 	_log("Has muerto.")
 	await get_tree().create_timer(1.5).timeout
 	GameState.game_over()
+
+## Caída en manos enemigas: desarmado, a media vida, y a la celda del mapa.
+## La usan la derrota contra capturadores y la rendición voluntaria.
+func _captured(msg: String) -> void:
+	_resolved = true
+	combat_over = true
+	GameState.player_hp = 20
+	GameState.bleeding = 0
+	GameState.pending_capture = true
+	GameState.equip_weapon(null)
+	_log(msg)
+	await get_tree().create_timer(1.8).timeout
+	AudioManager.stop_music()
+	GameState.end_combat()
+
+## Rendirse ante los británicos: te toman prisionero (Convención de Ginebra
+## mediante). Menos heroico, más vivo.
+func _on_surrender() -> void:
+	if combat_over or not is_player_turn or _pending_dodge:
+		return
+	Dialogue.ask("¿Tirás el arma y levantás las manos?", ["Rendirte", "Mejor no"])
+	var choice: int = await Dialogue.chosen
+	if choice != 0:
+		return
+	await _captured("—Hands up! Te atan las muñecas. Sos prisionero de guerra.")
+
+## Intimidar: un grito con el arma en alto puede hacer retroceder a un enemigo.
+func _on_intimidate() -> void:
+	if combat_over or not is_player_turn or _pending_dodge:
+		return
+	is_player_turn = false
+	var mod := GameState.get_force_mod()
+	var r := Dice.check(mod, 13)
+	if r["success"]:
+		combat_over = true
+		_resolved = true
+		_log("Rugís con el arma en alto. Duda... y retrocede entre la niebla.\n[d20 %d+%d=%d vs 13]" % [r["die"], mod, r["total"]])
+		await get_tree().create_timer(1.2).timeout
+		GameState.flee_combat()
+	else:
+		_log("Tu grito suena a miedo. Se te viene encima.\n[d20 %d+%d=%d vs 13]" % [r["die"], mod, r["total"]])
+		await get_tree().create_timer(0.6).timeout
+		_enemy_turn()
+
+## Calmar a un desertor (estilo Termina): si le hablás bien, baja el arma
+## y hasta te deja algo antes de perderse en la turba.
+func _on_calm() -> void:
+	if combat_over or not is_player_turn or _pending_dodge:
+		return
+	is_player_turn = false
+	var r := Dice.check(0, 12)
+	if r["success"]:
+		combat_over = true
+		_resolved = true
+		GameState.add_item(GameState.items_by_id["venda"], 1)
+		_log("«Tranquilo, hermano. Somos los dos de acá.»\nBaja el arma. Te deja una venda y se pierde en la niebla.\n[d20 %d vs 12]" % r["die"])
+		await get_tree().create_timer(1.4).timeout
+		GameState.flee_combat()
+	else:
+		_log("«¡No te me acerques!» No te escucha.\n[d20 %d vs 12]" % r["die"])
+		await get_tree().create_timer(0.6).timeout
+		_enemy_turn()
 
 func _log(msg: String) -> void:
 	if GameState.sanity < 25 and Dice.chance(0.4):

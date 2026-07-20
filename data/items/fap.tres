@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "fap"
+display_name = "FAP (Fusil Automático Pesado)"
+description = "El FAL de cañón pesado y bípode. Arma automática de escuadra: escupe fuego, pero es pesada y tironea."
+damage = 22
+pulse_mod = 0
+dodge_mod = -1
+force_mod = 0
+perception_mod = 0
+weapon_type = "ametralladora"
+one_handed = false
+weight = 5
+attack_text = "Barrés a %s con una ráfaga sostenida."
+find_text = "Un FAP de cañón pesado. Alguien le dejó el bípode puesto."
+status_effect = "bleed"
+status_chance = 0.3
+variance = 4
+mag_size = 20
+fire_cooldown = 0.35
+effective_range = 150.0
+reliability = 0.88
+mud_sensitivity = 0.6
+ammo_type = "7.62"
+accepted_slots = Array[String](["bipod", "magazine", "stock", "optic"])

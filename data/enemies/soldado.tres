@@ -25,3 +25,5 @@ ai_hurt = "burst"
 ai_desperate = "grenade"
 ai_chance_hurt = 0.3
 ai_chance_desperate = 0.6
+captures = true
+talk_type = "britanico"

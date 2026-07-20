@@ -13,6 +13,8 @@ const VALID_KEYS := {
 	"money": TYPE_INT, "inventory": TYPE_DICTIONARY, "flags": TYPE_DICTIONARY,
 	"parts": TYPE_DICTIONARY, "danger": TYPE_INT, "journal": TYPE_ARRAY,
 	"game_mode": TYPE_STRING, "ambient_light": TYPE_INT,
+	"time_hours": TYPE_FLOAT, "trench_foot": TYPE_INT,
+	"day": TYPE_INT, "reputation": TYPE_INT,
 	"light_battery": TYPE_FLOAT, "camera_zoom": TYPE_FLOAT,
 	"linterna_on": TYPE_BOOL,
 	"weapon_id": TYPE_STRING, "skill_mods": TYPE_DICTIONARY,
@@ -21,6 +23,7 @@ const VALID_KEYS := {
 	"companion": TYPE_STRING, "companion_hp": TYPE_INT, "companion_hp_max": TYPE_INT,
 	"concussion": TYPE_INT, "shell_shock": TYPE_INT, "burns": TYPE_INT,
 	"wound_infection": TYPE_INT, "artillery_used": TYPE_BOOL,
+	"weapon_states": TYPE_DICTIONARY,
 }
 
 func has_save() -> bool:

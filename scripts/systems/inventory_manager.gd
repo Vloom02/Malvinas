@@ -2,7 +2,9 @@ class_name InventoryManager
 ## Gestiona inventario, items, crafteo y tienda.
 ## Se instancia dentro de GameState para mantener la API existente.
 
-const INVENTORY_MAX := 999999
+## ESPACIOS del inventario (ítems distintos; apilar más del mismo no ocupa
+## espacio extra, estilo Fear & Hunger: la decisión es QUÉ llevás, no cuánto).
+const INVENTORY_MAX := 24
 
 var inventory: Dictionary = {}   # ItemData -> cantidad
 var money: int = 0
@@ -29,6 +31,13 @@ const RECIPE_FOGATA := preload("res://data/recipes/fogota_recipe.tres")
 const RECIPE_VENDA_ESTERILIZADA := preload("res://data/recipes/venda_esterilizada_recipe.tres")
 var recipes: Array = [RECIPE_FOGATA, RECIPE_VENDA_ESTERILIZADA]
 
+## Mejoras de arma (mesa de crafteo): se fabrican y se MONTAN directo en el arma
+## equipada. Los AccessoryData no pasan por el inventario (que es ItemData→cant).
+const RECIPE_CORREA := preload("res://data/recipes/correa_recipe.tres")
+const RECIPE_TRIPODE := preload("res://data/recipes/tripode_recipe.tres")
+const RECIPE_MIRA := preload("res://data/recipes/mira_recipe.tres")
+var accessory_recipes: Array = [RECIPE_CORREA, RECIPE_TRIPODE, RECIPE_MIRA]
+
 func setup() -> void:
 	items_by_id = {
 		"venda": ITEM_VENDA, "racion": ITEM_RACION, "morfina": ITEM_MORFINA,
@@ -37,26 +46,46 @@ func setup() -> void:
 		"diente": ITEM_DIENTE, "fogata_portatil": ITEM_FOGATA_PORTATIL,
 		"venda_esterilizada": ITEM_VENDA_ESTERILIZADA,
 		"linterna": ITEM_LINTERNA, "pilas": ITEM_PILAS,
-		# Armas.
+		"kit_limpieza": preload("res://data/items/kit_limpieza.tres"),
+		"bidon_gasoil": preload("res://data/items/bidon_gasoil.tres"),
+		"medias_secas": preload("res://data/items/medias_secas.tres"),
+		"carne_cruda": preload("res://data/items/carne_cruda.tres"),
+		"carta_casa": preload("res://data/items/carta_casa.tres"),
+		# Armas de fuego.
+		"fal": preload("res://data/items/fal.tres"),
+		"fap": preload("res://data/items/fap.tres"),
+		"fn_mag": preload("res://data/items/fn_mag.tres"),
+		"fmk3": preload("res://data/items/fmk3.tres"),
+		"browning_hp": preload("res://data/items/browning_hp.tres"),
+		"escopeta": preload("res://data/items/escopeta.tres"),
+		# Armas cuerpo a cuerpo.
 		"cuchillo_trinchera": preload("res://data/items/cuchillo_trinchera.tres"),
-		"fusil_f8": preload("res://data/items/fusil_f8.tres"),
-		"fal_m1982": preload("res://data/items/fal_m1982.tres"),
 		"palo_filo": preload("res://data/items/palo_filo.tres"),
 		"cuchillo_combate": preload("res://data/items/cuchillo_combate.tres"),
 		"bayoneta": preload("res://data/items/bayoneta.tres"),
-		"escopeta": preload("res://data/items/escopeta.tres"),
 		# Libros de habilidades.
 		"informe_medico": preload("res://data/items/informe_medico.tres"),
 		"manual_sigilo": preload("res://data/items/manual_sigilo.tres"),
 		"manual_asalto": preload("res://data/items/manual_asalto.tres"),
 		"orden_del_dia": preload("res://data/items/orden_del_dia.tres"),
+		# Munición: balas sueltas + cargadores/cintas (llenos y vacíos).
+		"balas_762": preload("res://data/items/balas_762.tres"),
+		"balas_9mm": preload("res://data/items/balas_9mm.tres"),
+		"cartuchos_12": preload("res://data/items/cartuchos_12.tres"),
+		"cargador_762": preload("res://data/items/cargador_762.tres"),
+		"cargador_762_vacio": preload("res://data/items/cargador_762_vacio.tres"),
+		"cargador_9mm": preload("res://data/items/cargador_9mm.tres"),
+		"cargador_9mm_vacio": preload("res://data/items/cargador_9mm_vacio.tres"),
+		"cinta_762": preload("res://data/items/cinta_762.tres"),
+		"cinta_762_vacia": preload("res://data/items/cinta_762_vacia.tres"),
 		# Explosivos y artillería.
 		"granada_f1": preload("res://data/items/granada_f1.tres"),
 		"c4": preload("res://data/items/c4.tres"),
 		"claymore": preload("res://data/items/claymore.tres"),
 		"coordenadas_artilleria": preload("res://data/items/coordenadas_artilleria.tres"),
 	}
-	shop_items = [ITEM_VENDA, ITEM_RACION, ITEM_MORFINA, ITEM_ANTIBIOTICOS, ITEM_FOSFOROS, ITEM_TABLILLA, ITEM_RAMA, ITEM_ALCOHOL, ITEM_LINTERNA, ITEM_PILAS]
+	shop_items = [ITEM_VENDA, ITEM_RACION, ITEM_MORFINA, ITEM_ANTIBIOTICOS, ITEM_FOSFOROS, ITEM_TABLILLA, ITEM_RAMA, ITEM_ALCOHOL, ITEM_LINTERNA, ITEM_PILAS,
+		items_by_id["balas_762"], items_by_id["balas_9mm"], items_by_id["cartuchos_12"]]
 
 ## Arma de prueba: el FAL arranca en el inventario para poder equiparla y probar
 ## el disparo. (Las armas se guardan en el dict de inventario como WeaponData.)
@@ -67,20 +96,27 @@ func give_starting_items(game_mode: String) -> void:
 	add_item(ITEM_RACION, 1)
 	add_item(ITEM_RAMA, 2)
 	inventory[WEAPON_FAL] = 1
+	# Munición inicial: un cargador listo, uno vacío y balas para probar el ciclo
+	# completo (llenar cargador en el inventario → R para recargar).
+	# El resto del arsenal se consigue con el cheat F10 o en el cofre de pruebas.
+	add_item(items_by_id["cargador_762"], 1)
+	add_item(items_by_id["cargador_762_vacio"], 1)
+	add_item(items_by_id["balas_762"], 20)
 	if game_mode == "cabeza":
 		money = 10
 		add_item(ITEM_LINTERNA, 1)
 	else:
 		money = 4
 
+## Espacios ocupados (ítems distintos, no unidades).
 func inventory_total() -> int:
-	var t := 0
-	for c in inventory.values():
-		t += c
-	return t
+	return inventory.size()
 
 func add_item(item: ItemData, qty: int = 1) -> bool:
 	if item == null:
+		return false
+	if not inventory.has(item) and inventory.size() >= INVENTORY_MAX:
+		print("[Inventario] Lleno (%d espacios). Hay que soltar algo." % INVENTORY_MAX)
 		return false
 	inventory[item] = int(inventory.get(item, 0)) + qty
 	print("[Inventario] +%d %s" % [qty, item.display_name])
@@ -117,6 +153,22 @@ func _apply_item_effect(item: ItemData, state: Node) -> String:
 				state.infection = clampi(state.infection + 15, 0, 100)
 				state.body_changed.emit()
 				print("[Inventario] La carne podrida te hizo mal. Infección sube.")
+			elif item.id == "carne_cruda" and Dice.chance(0.25):
+				state.infection = clampi(state.infection + 8, 0, 100)
+				state.body_changed.emit()
+				print("[Inventario] La carne cruda te cae pesada. Mejor asarla.")
+			return "consumed"
+		"dry_feet":
+			if state.trench_foot <= 0:
+				return ""
+			state.trench_foot = 0
+			state._tf_warned = false
+			state.body_changed.emit()
+			print("[Cuerpo] Medias secas. Los pies vuelven a la vida.")
+			return "consumed"
+		"letter":
+			state.sanity = mini(state.SANITY_MAX, state.sanity + item.amount)
+			print("[Cordura] Leés la carta una vez más. Todavía hay un afuera.")
 			return "consumed"
 		"morphine":
 			state.player_hp += item.amount
@@ -126,6 +178,13 @@ func _apply_item_effect(item: ItemData, state: Node) -> String:
 				return ""
 			state.infection = 0
 			state.body_changed.emit()
+			return "consumed"
+		"clean_weapon":
+			if state.equipped_weapon == null:
+				print("[Arma] No tenés arma para limpiar.")
+				return ""
+			state.clean_weapon()
+			print("[Arma] Limpiás y engrasás el arma. Barro y humedad afuera.")
 			return "consumed"
 		"warm":
 			if state.cold <= 0:
@@ -162,6 +221,21 @@ func _apply_item_effect(item: ItemData, state: Node) -> String:
 			if state.light_battery >= 100:
 				return ""
 			state.light_battery = mini(100, state.light_battery + item.amount)
+			return "consumed"
+		"load_mag":
+			# Cargador/cinta VACÍO: usarlo lo llena con balas sueltas del
+			# inventario (item.amount balas) y lo convierte en el item lleno.
+			var full_id: String = item.id.trim_suffix("_vacio").trim_suffix("_vacia")
+			var bullets_id := "balas_762" if item.id.contains("762") else "balas_9mm"
+			var bullets: ItemData = items_by_id.get(bullets_id)
+			var have := int(inventory.get(bullets, 0))
+			if have < item.amount:
+				print("[Munición] Necesitás %d balas y tenés %d." % [item.amount, have])
+				return ""
+			inventory[bullets] -= item.amount
+			if inventory[bullets] <= 0:
+				inventory.erase(bullets)
+			add_item(items_by_id[full_id], 1)
 			return "consumed"
 		_:
 			return ""
@@ -222,14 +296,51 @@ func craft(recipe: CraftRecipe) -> bool:
 		inventory[result] = int(inventory.get(result, 0)) + recipe.result_qty
 	return true
 
+# --- Mejoras de arma (mesa de crafteo) ---
+
+func _load_accessory_res(acc_id: String) -> Resource:
+	var path := "res://data/items/%s.tres" % acc_id
+	return load(path) if ResourceLoader.exists(path) else null
+
+## Estado de una receta de mejora respecto del arma equipada:
+## "ok" (se puede fabricar y montar), "sin_arma", "slot" (el arma no acepta esa
+## ranura), "puesto" (ya está montada) o "faltan" (sin ingredientes).
+func accessory_recipe_status(recipe: CraftRecipe, state: Node) -> String:
+	if state.equipped_weapon == null:
+		return "sin_arma"
+	var acc := _load_accessory_res(recipe.result_id)
+	if acc == null or not state.equipped_weapon.accepted_slots.has(acc.slot_type):
+		return "slot"
+	var st: Dictionary = state.equipped_weapon_state()
+	if str(st["accessories"].get(acc.slot_type, "")) != "":
+		return "puesto"
+	if not _has_ingredients(recipe):
+		return "faltan"
+	return "ok"
+
+## Fabrica la mejora consumiendo ingredientes y la monta en el arma equipada.
+func craft_accessory(recipe: CraftRecipe, state: Node) -> bool:
+	if accessory_recipe_status(recipe, state) != "ok":
+		return false
+	for ing_id in recipe.ingredients.keys():
+		var item: ItemData = items_by_id.get(str(ing_id))
+		var needed: int = recipe.ingredients[ing_id]
+		inventory[item] -= needed
+		if inventory[item] <= 0:
+			inventory.erase(item)
+	return state.attach_accessory(_load_accessory_res(recipe.result_id))
+
 # --- Tienda ---
 
-func buy_item(item: ItemData) -> bool:
-	if item == null or item.price <= 0 or money < item.price:
+func buy_item(item: ItemData, price_mult: float = 1.0) -> bool:
+	if item == null or item.price <= 0:
 		return false
-	if inventory_total() + 1 > INVENTORY_MAX:
+	var cost := maxi(1, int(ceil(item.price * price_mult)))
+	if money < cost:
 		return false
-	money -= item.price
+	if not inventory.has(item) and inventory.size() >= INVENTORY_MAX:
+		return false
+	money -= cost
 	add_item(item, 1)
 	return true
 

@@ -7,6 +7,11 @@
 [ext_resource type="Texture2D" path="res://assets/ui/menu/btn_opciones.png" id="5"]
 [ext_resource type="Texture2D" path="res://assets/ui/menu/btn_logros.png" id="6"]
 [ext_resource type="Texture2D" path="res://assets/ui/menu/btn_salir.png" id="7"]
+[ext_resource type="Texture2D" path="res://assets/ui/menu/fondo_menu.png" id="8"]
+[ext_resource type="Texture2D" path="res://assets/ui/menu/cursor_fal.png" id="9"]
+[ext_resource type="Texture2D" path="res://assets/ui/menu/cursor_fal_izq.png" id="10"]
+
+[sub_resource type="StyleBoxEmpty" id="focusbox"]
 
 [node name="Title" type="Control"]
 layout_mode = 3
@@ -19,6 +24,19 @@ script = ExtResource("1")
 anchor_right = 1.0
 anchor_bottom = 1.0
 color = Color(0.04, 0.04, 0.05, 1)
+
+[node name="Fondo" type="TextureRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+texture = ExtResource("8")
+expand_mode = 1
+stretch_mode = 6
+modulate = Color(0.62, 0.62, 0.62, 1)
+
+[node name="FondoOscurecer" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.25)
 
 [node name="Logo" type="TextureRect" parent="."]
 anchor_left = 0.5
@@ -41,6 +59,7 @@ custom_minimum_size = Vector2(220, 0)
 theme_override_constants/separation = 4
 
 [node name="Nueva" type="Button" parent="Center/VBox"]
+theme_override_styles/focus = SubResource("focusbox")
 custom_minimum_size = Vector2(220, 29)
 flat = true
 text = ""
@@ -54,6 +73,7 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="Continuar" type="Button" parent="Center/VBox"]
+theme_override_styles/focus = SubResource("focusbox")
 custom_minimum_size = Vector2(220, 28)
 flat = true
 text = ""
@@ -67,6 +87,7 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="Opciones" type="Button" parent="Center/VBox"]
+theme_override_styles/focus = SubResource("focusbox")
 custom_minimum_size = Vector2(220, 28)
 flat = true
 text = ""
@@ -80,6 +101,7 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="Logros" type="Button" parent="Center/VBox"]
+theme_override_styles/focus = SubResource("focusbox")
 custom_minimum_size = Vector2(220, 27)
 flat = true
 text = ""
@@ -93,6 +115,7 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="Salir" type="Button" parent="Center/VBox"]
+theme_override_styles/focus = SubResource("focusbox")
 custom_minimum_size = Vector2(220, 25)
 flat = true
 text = ""
@@ -112,8 +135,18 @@ vertical_alignment = 1
 autowrap_mode = 2
 custom_minimum_size = Vector2(280, 160)
 
-[node name="Cursor" type="Label" parent="."]
+[node name="Cursor" type="TextureRect" parent="."]
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.78, 0.12, 0.12, 1)
-theme_override_font_sizes/font_size = 16
-text = "▶"
+offset_right = 83.0
+offset_bottom = 26.0
+texture = ExtResource("9")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CursorDer" type="TextureRect" parent="."]
+mouse_filter = 2
+offset_right = 83.0
+offset_bottom = 26.0
+texture = ExtResource("10")
+expand_mode = 1
+stretch_mode = 5

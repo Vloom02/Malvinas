@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/item_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "balas_762"
+display_name = "Balas 7.62"
+description = "Munición suelta 7.62 NATO. Se usa para llenar cargadores y cintas."
+effect = ""
+amount = 0
+price = 1

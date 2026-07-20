@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "fn_mag"
+display_name = "FN MAG 7,62"
+description = "Ametralladora de propósito general, alimentada por cinta. Devastadora, pero solo dispara apoyada en el trípode o una superficie."
+damage = 26
+pulse_mod = -1
+dodge_mod = -2
+force_mod = 0
+perception_mod = 0
+weapon_type = "ametralladora"
+one_handed = false
+weight = 8
+attack_text = "La MAG ruge y acribilla a %s."
+find_text = "Una FN MAG con la cinta puesta. Pesa una barbaridad."
+status_effect = "bleed"
+status_chance = 0.35
+variance = 5
+mag_size = 50
+fire_cooldown = 0.12
+effective_range = 180.0
+reliability = 0.85
+mud_sensitivity = 0.8
+ammo_type = "7.62"
+needs_mount = true
+accepted_slots = Array[String](["bipod", "tripod", "ammo_container"])
